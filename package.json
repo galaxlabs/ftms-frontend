@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "frappe-ui": "^1.7.0",
+    "frappe-ui": "^0.1.278",
     "vue": "^3.5.0"
   },
   "devDependencies": {
