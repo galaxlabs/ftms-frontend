@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-72 shrink-0 border-r border-white/10 bg-slate-950/80 backdrop-blur-xl">
+  <aside class="hidden w-72 shrink-0 border-r border-white/10 bg-slate-950/80 backdrop-blur-xl lg:block">
     <div class="flex h-full flex-col p-4">
       <div class="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-soft">
         <div class="text-xs uppercase tracking-[0.35em] text-blue-300">FTMS</div>
