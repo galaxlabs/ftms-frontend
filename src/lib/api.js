@@ -21,6 +21,10 @@ async function call(method, params = {}) {
 
 export const api = {
   call,
+  login: (usr, pwd) => call('login', { usr, pwd }),
+  logout: () => call('logout'),
+  currentUser: () => call('ftms.api.auth.get_current_user'),
+  updateProfile: (payload) => call('ftms.api.auth.update_profile', payload),
   dashboard: () => call('ftms.api.dashboard.overview'),
   signup: (payload) => call('ftms.api.onboarding.signup', payload),
   companies: () => call('ftms.api.company.list_companies'),

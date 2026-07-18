@@ -3,7 +3,16 @@
     <Sidebar :active="active" :items="nav" @navigate="active = $event" />
 
     <main class="flex min-w-0 flex-1 flex-col">
-      <Topbar v-model="selectedCompany" :title="pageTitle" :companies="companies" @signup="showSignup = true" />
+      <Topbar
+        v-model="selectedCompany"
+        :title="pageTitle"
+        :companies="companies"
+        :user="currentUser"
+        @login="showLogin = true"
+        @logout="logout"
+        @profile="active = 'settings'"
+        @signup="showSignup = true"
+      />
 
       <div class="border-b border-white/10 bg-slate-950/60 px-4 py-3 lg:hidden">
         <select v-model="active" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none">
@@ -20,6 +29,8 @@
 
         <RoutesPage v-else-if="active === 'routes'" :rows="datasets.routes" @create="addDraftRecord('routes', $event)" />
 
+        <ProfileSettingsPage v-else-if="active === 'settings'" :user="currentUser" :save-profile="saveProfile" />
+
         <RecordsPage
           v-else
           :eyebrow="pageMeta.eyebrow"
@@ -31,6 +42,40 @@
         />
       </section>
     </main>
+
+    <div v-if="showLogin" class="fixed inset-0 z-50 flex items-end bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center sm:justify-center" @click.self="closeLogin">
+      <form class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl" @submit.prevent="submitLogin">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="text-xs uppercase tracking-[0.25em] text-slate-500">User Login</div>
+            <h2 class="mt-1 text-2xl font-semibold text-white">Login to FTMS</h2>
+          </div>
+          <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="closeLogin">Close</button>
+        </div>
+
+        <div class="mt-5 space-y-4">
+          <label class="block space-y-2 text-sm text-slate-300">
+            <span>Email</span>
+            <input v-model="loginForm.usr" required type="email" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="admin@company.com" />
+          </label>
+          <label class="block space-y-2 text-sm text-slate-300">
+            <span>Password</span>
+            <input v-model="loginForm.pwd" required type="password" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Password" />
+          </label>
+        </div>
+
+        <div v-if="loginMessage" class="mt-4 rounded-2xl border px-4 py-3 text-sm" :class="loginError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">
+          {{ loginMessage }}
+        </div>
+
+        <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button type="button" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5" @click="closeLogin">Cancel</button>
+          <button type="submit" class="rounded-xl bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60" :disabled="loginLoading">
+            {{ loginLoading ? 'Logging in...' : 'Login' }}
+          </button>
+        </div>
+      </form>
+    </div>
 
     <div v-if="showSignup" class="fixed inset-0 z-50 flex items-end bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center sm:justify-center" @click.self="closeSignup">
       <form class="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl" @submit.prevent="submitSignup">
@@ -85,6 +130,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { api } from './lib/api'
 import DashboardPage from './pages/DashboardPage.vue'
+import ProfileSettingsPage from './pages/ProfileSettingsPage.vue'
 import RecordsPage from './pages/RecordsPage.vue'
 import RoutesPage from './pages/RoutesPage.vue'
 import Sidebar from './components/Sidebar.vue'
@@ -199,6 +245,12 @@ const active = ref('dashboard')
 const selectedCompany = ref('')
 const companies = ref([{ name: 'default', company_name: 'Default Company' }])
 const loadError = ref('')
+const currentUser = ref({ is_authenticated: false })
+const showLogin = ref(false)
+const loginLoading = ref(false)
+const loginMessage = ref('')
+const loginError = ref(false)
+const loginForm = ref({ usr: '', pwd: '' })
 const showSignup = ref(false)
 const signupLoading = ref(false)
 const signupMessage = ref('')
@@ -218,6 +270,11 @@ async function loadCompanies() {
     datasets.value.companies = rows
     selectedCompany.value = selectedCompany.value || rows[0].name
   }
+}
+
+async function loadCurrentUser() {
+  currentUser.value = await api.currentUser()
+  if (currentUser.value?.company) selectedCompany.value = currentUser.value.company
 }
 
 async function loadData() {
@@ -276,6 +333,40 @@ function addDraftRecord(key, row) {
   }
 }
 
+function closeLogin() {
+  showLogin.value = false
+  loginMessage.value = ''
+  loginError.value = false
+}
+
+async function submitLogin() {
+  loginLoading.value = true
+  loginMessage.value = ''
+  loginError.value = false
+  try {
+    await api.login(loginForm.value.usr, loginForm.value.pwd)
+    await loadCurrentUser()
+    loginForm.value = { usr: '', pwd: '' }
+    loginMessage.value = 'Logged in.'
+    showLogin.value = false
+    await loadCompanies()
+    await loadData()
+  } catch (error) {
+    loginError.value = true
+    loginMessage.value = String(error?.message || error)
+  } finally {
+    loginLoading.value = false
+  }
+}
+
+async function logout() {
+  await api.logout()
+  currentUser.value = { is_authenticated: false }
+  selectedCompany.value = companies.value[0]?.name || ''
+  active.value = 'dashboard'
+  await loadData()
+}
+
 function closeSignup() {
   showSignup.value = false
   signupMessage.value = ''
@@ -288,7 +379,9 @@ async function submitSignup() {
   signupError.value = false
   try {
     const result = await api.signup(signupForm.value)
-    signupMessage.value = `Created ${result.company_name} and linked ${result.user} as ${result.role}.`
+    signupMessage.value = result.reset_email_sent
+      ? `Created ${result.company_name}. A password reset email was sent to ${result.user}.`
+      : `Created ${result.company_name}. Password reset email could not be sent; contact admin to set a password.`
     await loadCompanies()
     if (result.company) selectedCompany.value = result.company
     signupForm.value = { company_name: '', email: '', username: '', first_name: '', last_name: '' }
@@ -300,10 +393,15 @@ async function submitSignup() {
   }
 }
 
+async function saveProfile(payload) {
+  currentUser.value = await api.updateProfile(payload)
+}
+
 watch(selectedCompany, loadData)
 
 onMounted(async () => {
   try {
+    await loadCurrentUser()
     await loadCompanies()
     await loadData()
   } catch (error) {
