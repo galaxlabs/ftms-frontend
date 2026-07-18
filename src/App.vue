@@ -3,7 +3,7 @@
     <Sidebar :active="active" :items="nav" @navigate="active = $event" />
 
     <main class="flex min-w-0 flex-1 flex-col">
-      <Topbar v-model="selectedCompany" :title="pageTitle" :companies="companies" />
+      <Topbar v-model="selectedCompany" :title="pageTitle" :companies="companies" @signup="showSignup = true" />
 
       <div class="border-b border-white/10 bg-slate-950/60 px-4 py-3 lg:hidden">
         <select v-model="active" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none">
@@ -18,7 +18,7 @@
 
         <DashboardPage v-if="active === 'dashboard'" :dashboard="dashboard" @refresh="loadData" />
 
-        <RoutesPage v-else-if="active === 'routes'" :rows="datasets.routes" />
+        <RoutesPage v-else-if="active === 'routes'" :rows="datasets.routes" @create="addDraftRecord('routes', $event)" />
 
         <RecordsPage
           v-else
@@ -27,9 +27,57 @@
           :description="pageMeta.description"
           :columns="pageMeta.columns"
           :rows="tableRows"
+          @create="addDraftRecord(active, $event)"
         />
       </section>
     </main>
+
+    <div v-if="showSignup" class="fixed inset-0 z-50 flex items-end bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center sm:justify-center" @click.self="closeSignup">
+      <form class="w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl" @submit.prevent="submitSignup">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Company Onboarding</div>
+            <h2 class="mt-1 text-2xl font-semibold text-white">Create your FTMS account</h2>
+            <p class="mt-2 text-sm text-slate-400">This creates a company, user, and active Company Admin link for tenant access.</p>
+          </div>
+          <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="closeSignup">Close</button>
+        </div>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-2">
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>Company</span>
+            <input v-model="signupForm.company_name" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Galaxy Transport" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>Email</span>
+            <input v-model="signupForm.email" required type="email" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="admin@company.com" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>User name</span>
+            <input v-model="signupForm.username" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="admin" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>First name</span>
+            <input v-model="signupForm.first_name" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="First name" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>Last name</span>
+            <input v-model="signupForm.last_name" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Last name" />
+          </label>
+        </div>
+
+        <div v-if="signupMessage" class="mt-4 rounded-2xl border px-4 py-3 text-sm" :class="signupError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">
+          {{ signupMessage }}
+        </div>
+
+        <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <button type="button" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5" @click="closeSignup">Cancel</button>
+          <button type="submit" class="rounded-xl bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60" :disabled="signupLoading">
+            {{ signupLoading ? 'Creating...' : 'Create account' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -151,6 +199,11 @@ const active = ref('dashboard')
 const selectedCompany = ref('')
 const companies = ref([{ name: 'default', company_name: 'Default Company' }])
 const loadError = ref('')
+const showSignup = ref(false)
+const signupLoading = ref(false)
+const signupMessage = ref('')
+const signupError = ref(false)
+const signupForm = ref({ company_name: '', email: '', username: '', first_name: '', last_name: '' })
 const dashboard = ref({ cards: { trips: 0, bookings: 0, invoices: 0, vat: 0 }, activity: [] })
 const datasets = ref({ companies: [], trips: [], bookings: [], invoices: [], contracts: [], vehicles: [], employees: [], routes: [], settings: [] })
 
@@ -213,6 +266,37 @@ async function loadData() {
   } catch (error) {
     loadError.value = String(error?.message || error)
     dashboard.value.activity = [{ label: loadError.value, time: 'error' }]
+  }
+}
+
+function addDraftRecord(key, row) {
+  datasets.value = {
+    ...datasets.value,
+    [key]: [{ ...row, company: selectedCompany.value, status: row.status || 'Draft' }, ...(datasets.value[key] || [])],
+  }
+}
+
+function closeSignup() {
+  showSignup.value = false
+  signupMessage.value = ''
+  signupError.value = false
+}
+
+async function submitSignup() {
+  signupLoading.value = true
+  signupMessage.value = ''
+  signupError.value = false
+  try {
+    const result = await api.signup(signupForm.value)
+    signupMessage.value = `Created ${result.company_name} and linked ${result.user} as ${result.role}.`
+    await loadCompanies()
+    if (result.company) selectedCompany.value = result.company
+    signupForm.value = { company_name: '', email: '', username: '', first_name: '', last_name: '' }
+  } catch (error) {
+    signupError.value = true
+    signupMessage.value = String(error?.message || error)
+  } finally {
+    signupLoading.value = false
   }
 }
 

@@ -9,7 +9,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.name" class="border-t border-white/5 text-slate-200 hover:bg-white/5">
+        <tr v-for="row in rows" :key="row.name" class="cursor-pointer border-t border-white/5 text-slate-200 hover:bg-white/5" @click="$emit('select', row)">
           <td v-for="column in columns" :key="column.key" class="px-4 py-3">
             <StatusBadge v-if="column.type === 'status'" :value="row[column.key]" />
             <span v-else>{{ formatCell(row, column) }}</span>
@@ -28,6 +28,7 @@
 import StatusBadge from './StatusBadge.vue'
 
 defineProps({ title: String, columns: Array, rows: Array })
+defineEmits(['select'])
 
 function formatCell(row, column) {
   const value = row[column.key]

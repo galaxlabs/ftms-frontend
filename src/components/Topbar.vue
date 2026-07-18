@@ -9,6 +9,7 @@
       <select v-model="modelValueProxy" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none">
         <option v-for="company in companies" :key="company.name" :value="company.name">{{ company.company_name }}</option>
       </select>
+      <button class="rounded-xl bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400" @click="$emit('signup')">Sign up</button>
       <button class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white">Export</button>
     </div>
   </header>
@@ -18,7 +19,7 @@
 import { computed } from 'vue'
 
 const props = defineProps({ title: String, companies: Array, modelValue: String })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'signup'])
 
 const modelValueProxy = computed({
   get: () => props.modelValue,

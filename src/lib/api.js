@@ -22,6 +22,7 @@ async function call(method, params = {}) {
 export const api = {
   call,
   dashboard: () => call('ftms.api.dashboard.overview'),
+  signup: (payload) => call('ftms.api.onboarding.signup', payload),
   companies: () => call('ftms.api.company.list_companies'),
   trips: (company, limit = 20) => call('ftms.api.trip.list_trips', { company, limit }),
   bookings: (company, limit = 20) => call('ftms.api.booking.list_bookings', { company, limit }),
