@@ -33,6 +33,14 @@
 
         <RoutesPage v-else-if="active === 'routes'" :rows="datasets.routes" @create="addDraftRecord('routes', $event)" />
 
+        <JoinRequestsPage
+          v-else-if="active === 'join_requests'"
+          :rows="datasets.join_requests"
+          @approve="handleApproveJoin"
+          @reject="handleRejectJoin"
+          @refresh="loadJoinRequests"
+        />
+
         <ProfileSettingsPage v-else-if="active === 'settings'" :user="currentUser" :save-profile="saveProfile" />
 
         <RecordsPage
@@ -137,6 +145,7 @@ import DashboardPage from './pages/DashboardPage.vue'
 import ProfileSettingsPage from './pages/ProfileSettingsPage.vue'
 import RecordsPage from './pages/RecordsPage.vue'
 import RoutesPage from './pages/RoutesPage.vue'
+import JoinRequestsPage from './pages/JoinRequestsPage.vue'
 import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
 
@@ -150,6 +159,7 @@ const nav = [
   { key: 'contracts', label: 'Contracts', short: 'B2B' },
   { key: 'vehicles', label: 'Vehicles', short: 'Fleet' },
   { key: 'captains', label: 'Captains', short: 'Drivers' },
+  { key: 'join_requests', label: 'Join Req', short: 'Pending' },
   { key: 'expenses', label: 'Expenses', short: 'OCR' },
   { key: 'routes', label: 'Routes', short: 'Distance' },
   { key: 'settings', label: 'Settings', short: 'System' },
@@ -247,7 +257,7 @@ const pageConfig = {
   captains: {
     eyebrow: 'Captains',
     title: 'Captains',
-    description: 'Licensed captains linked to a transportation company with ID, license, and driver-card expiry tracking.',
+    description: 'Licensed captains linked to a transportation company with full KSA documents.',
     columns: [
       { label: 'Name', key: 'full_name' },
       { label: 'Mobile', key: 'mobile_no' },
@@ -301,7 +311,7 @@ const signupMessage = ref('')
 const signupError = ref(false)
 const signupForm = ref({ company_name: '', email: '', username: '', first_name: '', last_name: '' })
 const dashboard = ref({ cards: { trips: 0, bookings: 0, invoices: 0, vat: 0 }, activity: [] })
-const datasets = ref({ companies: [], trips: [], bookings: [], customers: [], invoices: [], contracts: [], vehicles: [], captains: [], expenses: [], routes: [], settings: [] })
+const datasets = ref({ companies: [], trips: [], bookings: [], customers: [], invoices: [], contracts: [], vehicles: [], captains: [], expenses: [], routes: [], settings: [], join_requests: [] })
 
 const pageTitle = computed(() => nav.find((item) => item.key === active.value)?.label || 'Dashboard')
 const pageMeta = computed(() => pageConfig[active.value] || pageConfig.settings)
@@ -321,10 +331,16 @@ async function loadCurrentUser() {
   if (currentUser.value?.company) selectedCompany.value = currentUser.value.company
 }
 
+async function loadJoinRequests() {
+  try {
+    datasets.value.join_requests = await api.joinRequests(selectedCompany.value, 'Pending')
+  } catch { datasets.value.join_requests = [] }
+}
+
 async function loadData() {
   loadError.value = ''
   try {
-    const [dashboardData, tripRows, bookingRows, customerRows, invoiceRows, contractRows, vehicleRows, captainRows, expenseRows, routeRows] = await Promise.all([
+    const [dashboardData, tripRows, bookingRows, customerRows, invoiceRows, contractRows, vehicleRows, captainRows, expenseRows, routeRows, joinRows] = await Promise.all([
       api.dashboard(selectedCompany.value),
       api.trips(selectedCompany.value, 50),
       api.bookings(selectedCompany.value, 50),
@@ -335,6 +351,7 @@ async function loadData() {
       currentUser.value?.is_authenticated ? api.captains(selectedCompany.value, 50) : Promise.resolve([]),
       currentUser.value?.is_authenticated ? api.expenses(selectedCompany.value, 50) : Promise.resolve([]),
       api.routes(selectedCompany.value, 50),
+      currentUser.value?.is_authenticated ? api.joinRequests(selectedCompany.value, 'Pending').catch(() => []) : Promise.resolve([]),
     ])
 
     datasets.value = {
@@ -348,6 +365,7 @@ async function loadData() {
       captains: captainRows,
       expenses: expenseRows,
       routes: routeRows,
+      join_requests: joinRows || [],
       settings: [
         { name: 'zatca', area: 'ZATCA Phase 2', status: 'Pending', notes: 'Needs real VAT/CR credentials for CSID onboarding' },
         { name: 'distance', area: 'Route Distance', status: 'Active', notes: 'Haversine auto-calculation via KSA City lat/lng' },
@@ -365,42 +383,58 @@ async function loadData() {
 async function addDraftRecord(key, row) {
   saveMessage.value = ''
   saveError.value = false
-
-  if (key === 'bookings') {
-    try {
-      const saved = await api.createBooking({ ...row, company: selectedCompany.value, source_channel: 'Website' })
-      datasets.value = {
-        ...datasets.value,
-        bookings: [{ ...row, ...saved, company: selectedCompany.value, booking_status: row.booking_status || 'Draft' }, ...(datasets.value.bookings || [])],
-      }
-      saveMessage.value = `Booking ${saved.name || saved.booking_title} saved.`
-    } catch (error) {
-      saveError.value = true
-      saveMessage.value = String(error?.message || error)
+  const handlers = {
+    bookings: () => api.createBooking({ ...row, company: selectedCompany.value, source_channel: 'Website' }),
+    routes: () => api.createRoute({ ...row, company: selectedCompany.value }),
+    customers: () => api.createCustomer({ ...row }),
+    trips: () => api.createTrip({ ...row }),
+    vehicles: () => api.createVehicle({ ...row }),
+    invoices: () => api.createInvoice({ ...row }),
+    contracts: () => api.createContract({ ...row }),
+  }
+  const handler = handlers[key]
+  if (!handler) {
+    datasets.value = {
+      ...datasets.value,
+      [key]: [{ ...row, company: selectedCompany.value, status: row.status || 'Draft' }, ...(datasets.value[key] || [])],
     }
+    saveMessage.value = `${pageMeta.value.title} draft added locally.`
     return
   }
-
-  if (key === 'routes') {
-    try {
-      const saved = await api.createRoute({ ...row, company: selectedCompany.value })
-      datasets.value = {
-        ...datasets.value,
-        routes: [saved, ...(datasets.value.routes || [])],
-      }
-      saveMessage.value = `Route ${saved.route_title || saved.name} saved.`
-    } catch (error) {
-      saveError.value = true
-      saveMessage.value = String(error?.message || error)
+  try {
+    const saved = await handler()
+    datasets.value = {
+      ...datasets.value,
+      [key]: [saved, ...(datasets.value[key] || [])],
     }
-    return
+    saveMessage.value = `${saved.customer_name || saved.name || saved.vehicle_name || saved.trip_title || saved.contract_title || saved.booking_title || saved.route_title || 'Record'} saved.`
+  } catch (error) {
+    saveError.value = true
+    saveMessage.value = String(error?.message || error)
   }
+}
 
-  datasets.value = {
-    ...datasets.value,
-    [key]: [{ ...row, company: selectedCompany.value, status: row.status || 'Draft' }, ...(datasets.value[key] || [])],
+async function handleApproveJoin(name) {
+  try {
+    await api.approveJoinRequest(name)
+    saveMessage.value = `Join request ${name} approved.`
+    await loadJoinRequests()
+    await loadData()
+  } catch (error) {
+    saveError.value = true
+    saveMessage.value = String(error?.message || error)
   }
-  saveMessage.value = `${pageMeta.value.title} draft added locally. Backend save is not enabled for this record type yet.`
+}
+
+async function handleRejectJoin(name) {
+  try {
+    await api.rejectJoinRequest(name)
+    saveMessage.value = `Join request ${name} rejected.`
+    await loadJoinRequests()
+  } catch (error) {
+    saveError.value = true
+    saveMessage.value = String(error?.message || error)
+  }
 }
 
 function closeLogin() {
