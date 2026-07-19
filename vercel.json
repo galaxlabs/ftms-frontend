@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://ftms.galaxylabs.online/api/:path*"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-export const API_BASE = (import.meta.env.VITE_FTMS_BACKEND_URL || 'https://ftms.galaxylabs.online').replace(/\/$/, '')
+export const API_BASE = (import.meta.env.VITE_FTMS_BACKEND_URL || '').replace(/\/$/, '')
 
 async function call(method, params = {}) {
   const body = new URLSearchParams()
