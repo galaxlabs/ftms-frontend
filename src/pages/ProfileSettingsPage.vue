@@ -30,6 +30,33 @@
             <span>Mobile</span>
             <input v-model="form.mobile_no" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="+966..." />
           </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>ID Document Type</span>
+            <select v-model="form.id_document_type" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400">
+              <option value="">Select document type</option>
+              <option>National ID</option>
+              <option>Iqama</option>
+              <option>Passport</option>
+              <option>GCC ID</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>ID No</span>
+            <input v-model="form.id_no" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="National ID / Iqama / Passport" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>Nationality</span>
+            <input v-model="form.nationality" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Saudi Arabia" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>ID Expiry Date</span>
+            <input v-model="form.id_expiry_date" type="date" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300 sm:col-span-2">
+            <span>ID Document URL</span>
+            <input v-model="form.id_document" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="/files/id-document.pdf" />
+          </label>
         </div>
 
         <div v-if="message" class="mt-4 rounded-2xl border px-4 py-3 text-sm" :class="error ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">
@@ -89,7 +116,7 @@ const props = defineProps({ user: Object, saveProfile: Function })
 const loading = ref(false)
 const message = ref('')
 const error = ref(false)
-const form = reactive({ first_name: '', last_name: '', mobile_no: '' })
+const form = reactive({ first_name: '', last_name: '', mobile_no: '', id_document_type: '', id_no: '', nationality: '', id_expiry_date: '', id_document: '' })
 
 watch(
   () => props.user,
@@ -97,6 +124,11 @@ watch(
     form.first_name = user?.first_name || ''
     form.last_name = user?.last_name || ''
     form.mobile_no = user?.mobile_no || ''
+    form.id_document_type = user?.id_document_type || ''
+    form.id_no = user?.id_no || ''
+    form.nationality = user?.nationality || ''
+    form.id_expiry_date = user?.id_expiry_date || ''
+    form.id_document = user?.id_document || ''
   },
   { immediate: true },
 )

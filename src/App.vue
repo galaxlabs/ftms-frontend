@@ -25,6 +25,10 @@
           {{ loadError }}
         </div>
 
+        <div v-if="saveMessage" class="mb-4 rounded-2xl border px-4 py-3 text-sm" :class="saveError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">
+          {{ saveMessage }}
+        </div>
+
         <DashboardPage v-if="active === 'dashboard'" :dashboard="dashboard" @refresh="loadData" />
 
         <RoutesPage v-else-if="active === 'routes'" :rows="datasets.routes" @create="addDraftRecord('routes', $event)" />
@@ -141,10 +145,12 @@ const nav = [
   { key: 'companies', label: 'Companies', short: 'Tenants' },
   { key: 'trips', label: 'Trips', short: 'Operations' },
   { key: 'bookings', label: 'Bookings', short: 'Ride app' },
+  { key: 'customers', label: 'Customers', short: 'People' },
   { key: 'invoices', label: 'Invoices', short: 'ZATCA' },
   { key: 'contracts', label: 'Contracts', short: 'B2B' },
   { key: 'vehicles', label: 'Vehicles', short: 'Fleet' },
-  { key: 'employees', label: 'Captains', short: 'Staff' },
+  { key: 'captains', label: 'Captains', short: 'Drivers' },
+  { key: 'expenses', label: 'Expenses', short: 'OCR' },
   { key: 'routes', label: 'Routes', short: 'Distance' },
   { key: 'settings', label: 'Settings', short: 'System' },
 ]
@@ -157,6 +163,9 @@ const pageConfig = {
     columns: [
       { label: 'Code', key: 'company_code' },
       { label: 'Name', key: 'company_name' },
+      { label: 'Arabic Name', key: 'company_name_ar' },
+      { label: 'VAT No', key: 'vat_no' },
+      { label: 'CR No', key: 'cr_no' },
       { label: 'Domain', key: 'domain' },
       { label: 'Status', key: 'status', type: 'status' },
     ],
@@ -183,6 +192,18 @@ const pageConfig = {
       { label: 'Customer', key: 'customer_name' },
       { label: 'Mobile', key: 'mobile_no' },
       { label: 'Status', key: 'booking_status', type: 'status' },
+    ],
+  },
+  customers: {
+    eyebrow: 'Customers',
+    title: 'Customers',
+    description: 'Passenger and customer records for bookings, contracts, and invoices.',
+    columns: [
+      { label: 'Name', key: 'customer_name' },
+      { label: 'Arabic Name', key: 'customer_name_ar' },
+      { label: 'Mobile', key: 'mobile_no' },
+      { label: 'Email', key: 'email' },
+      { label: 'Status', key: 'status', type: 'status' },
     ],
   },
   invoices: {
@@ -216,17 +237,38 @@ const pageConfig = {
     columns: [
       { label: 'Name', key: 'vehicle_name' },
       { label: 'Plate', key: 'plate_no' },
-      { label: 'Type', key: 'vehicle_type' },
+      { label: 'Registration', key: 'registration_no' },
+      { label: 'Operation Card', key: 'operation_card_no' },
+      { label: 'Op Card Expiry', key: 'operation_card_expiry_date' },
+      { label: 'Insurance Expiry', key: 'insurance_expiry_date' },
       { label: 'Status', key: 'status', type: 'status' },
     ],
   },
-  employees: {
+  captains: {
     eyebrow: 'Captains',
     title: 'Captains',
-    description: 'Drivers and operating staff linked to a transportation company.',
+    description: 'Licensed captains linked to a transportation company with ID, license, and driver-card expiry tracking.',
     columns: [
-      { label: 'Name', key: 'employee_name' },
-      { label: 'Company', key: 'company' },
+      { label: 'Name', key: 'full_name' },
+      { label: 'Mobile', key: 'mobile_no' },
+      { label: 'Iqama No', key: 'iqama_no' },
+      { label: 'License Expiry', key: 'license_expiry_date' },
+      { label: 'Driver Card', key: 'driver_card_no' },
+      { label: 'Status', key: 'status', type: 'status' },
+    ],
+  },
+  expenses: {
+    eyebrow: 'Expense OCR',
+    title: 'Expenses',
+    description: 'Captain trip expenses with receipt OCR extraction and company-name validation.',
+    columns: [
+      { label: 'Date', key: 'expense_date' },
+      { label: 'Captain', key: 'captain_user' },
+      { label: 'Type', key: 'expense_type' },
+      { label: 'Supplier', key: 'supplier_name' },
+      { label: 'Invoice', key: 'invoice_no' },
+      { label: 'Total', key: 'total_amount' },
+      { label: 'Receipt Check', key: 'receipt_validation_status', type: 'status' },
     ],
   },
   settings: {
@@ -245,6 +287,8 @@ const active = ref('dashboard')
 const selectedCompany = ref('')
 const companies = ref([{ name: 'default', company_name: 'Default Company' }])
 const loadError = ref('')
+const saveMessage = ref('')
+const saveError = ref(false)
 const currentUser = ref({ is_authenticated: false })
 const showLogin = ref(false)
 const loginLoading = ref(false)
@@ -257,7 +301,7 @@ const signupMessage = ref('')
 const signupError = ref(false)
 const signupForm = ref({ company_name: '', email: '', username: '', first_name: '', last_name: '' })
 const dashboard = ref({ cards: { trips: 0, bookings: 0, invoices: 0, vat: 0 }, activity: [] })
-const datasets = ref({ companies: [], trips: [], bookings: [], invoices: [], contracts: [], vehicles: [], employees: [], routes: [], settings: [] })
+const datasets = ref({ companies: [], trips: [], bookings: [], customers: [], invoices: [], contracts: [], vehicles: [], captains: [], expenses: [], routes: [], settings: [] })
 
 const pageTitle = computed(() => nav.find((item) => item.key === active.value)?.label || 'Dashboard')
 const pageMeta = computed(() => pageConfig[active.value] || pageConfig.settings)
@@ -280,13 +324,16 @@ async function loadCurrentUser() {
 async function loadData() {
   loadError.value = ''
   try {
-    const [tripRows, bookingRows, invoiceRows, contractRows, vehicleRows, employeeRows, routeRows] = await Promise.all([
+    const [dashboardData, tripRows, bookingRows, customerRows, invoiceRows, contractRows, vehicleRows, captainRows, expenseRows, routeRows] = await Promise.all([
+      api.dashboard(selectedCompany.value),
       api.trips(selectedCompany.value, 50),
       api.bookings(selectedCompany.value, 50),
+      currentUser.value?.is_authenticated ? api.customers(selectedCompany.value, 50) : Promise.resolve([]),
       api.invoices(selectedCompany.value, 50),
       api.contracts(selectedCompany.value, 50),
       api.vehicles(selectedCompany.value, 50),
-      api.employees(selectedCompany.value, 50),
+      currentUser.value?.is_authenticated ? api.captains(selectedCompany.value, 50) : Promise.resolve([]),
+      currentUser.value?.is_authenticated ? api.expenses(selectedCompany.value, 50) : Promise.resolve([]),
       api.routes(selectedCompany.value, 50),
     ])
 
@@ -294,10 +341,12 @@ async function loadData() {
       ...datasets.value,
       trips: tripRows,
       bookings: bookingRows,
+      customers: customerRows,
       invoices: invoiceRows,
       contracts: contractRows,
       vehicles: vehicleRows,
-      employees: employeeRows,
+      captains: captainRows,
+      expenses: expenseRows,
       routes: routeRows,
       settings: [
         { name: 'zatca', area: 'ZATCA Phase 2', status: 'Pending', notes: 'Needs real VAT/CR credentials for CSID onboarding' },
@@ -306,31 +355,52 @@ async function loadData() {
       ],
     }
 
-    dashboard.value = {
-      cards: {
-        trips: tripRows.length,
-        bookings: bookingRows.length,
-        invoices: invoiceRows.length,
-        vat: invoiceRows.reduce((sum, row) => sum + Number(row.vat_amount || 0), 0).toFixed(2),
-      },
-      activity: [
-        { label: `Trips loaded: ${tripRows.length}`, time: 'now' },
-        { label: `Bookings loaded: ${bookingRows.length}`, time: 'now' },
-        { label: `Routes loaded: ${routeRows.length}`, time: 'now' },
-        { label: `Invoices loaded: ${invoiceRows.length}`, time: 'now' },
-      ],
-    }
+    dashboard.value = dashboardData || dashboard.value
   } catch (error) {
     loadError.value = String(error?.message || error)
     dashboard.value.activity = [{ label: loadError.value, time: 'error' }]
   }
 }
 
-function addDraftRecord(key, row) {
+async function addDraftRecord(key, row) {
+  saveMessage.value = ''
+  saveError.value = false
+
+  if (key === 'bookings') {
+    try {
+      const saved = await api.createBooking({ ...row, company: selectedCompany.value, source_channel: 'Website' })
+      datasets.value = {
+        ...datasets.value,
+        bookings: [{ ...row, ...saved, company: selectedCompany.value, booking_status: row.booking_status || 'Draft' }, ...(datasets.value.bookings || [])],
+      }
+      saveMessage.value = `Booking ${saved.name || saved.booking_title} saved.`
+    } catch (error) {
+      saveError.value = true
+      saveMessage.value = String(error?.message || error)
+    }
+    return
+  }
+
+  if (key === 'routes') {
+    try {
+      const saved = await api.createRoute({ ...row, company: selectedCompany.value })
+      datasets.value = {
+        ...datasets.value,
+        routes: [saved, ...(datasets.value.routes || [])],
+      }
+      saveMessage.value = `Route ${saved.route_title || saved.name} saved.`
+    } catch (error) {
+      saveError.value = true
+      saveMessage.value = String(error?.message || error)
+    }
+    return
+  }
+
   datasets.value = {
     ...datasets.value,
     [key]: [{ ...row, company: selectedCompany.value, status: row.status || 'Draft' }, ...(datasets.value[key] || [])],
   }
+  saveMessage.value = `${pageMeta.value.title} draft added locally. Backend save is not enabled for this record type yet.`
 }
 
 function closeLogin() {
