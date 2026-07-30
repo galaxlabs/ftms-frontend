@@ -9,10 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "frappe-ui": "^0.1.278",
-    "vue": "^3.5.0",
     "@iconify-json/lucide": "^1.2.0",
-    "unplugin-icons": "^0.22.0"
+    "frappe-ui": "^0.1.278",
+    "unplugin-icons": "^0.22.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.0",

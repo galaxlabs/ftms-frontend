@@ -32,22 +32,25 @@
           </label>
           <label class="space-y-2 text-sm text-slate-300">
             <span>ID Document Type</span>
-            <select v-model="form.id_document_type" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400">
+            <select v-model="form.id_document_type" @change="validateDocNumber" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400">
               <option value="">Select document type</option>
-              <option>National ID</option>
-              <option>Iqama</option>
-              <option>Passport</option>
-              <option>GCC ID</option>
-              <option>Other</option>
+              <option v-for="dt in docTypes" :key="dt" :value="dt">{{ dt }}</option>
             </select>
           </label>
           <label class="space-y-2 text-sm text-slate-300">
             <span>ID No</span>
-            <input v-model="form.id_no" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="National ID / Iqama / Passport" />
+            <input v-model="form.id_no" @input="validateDocNumber" required class="w-full rounded-xl border px-3 py-2 text-white outline-none focus:border-blue-400" :class="docBorderClass" :placeholder="docPlaceholder" />
+            <p v-if="docHint" class="mt-1 text-xs text-slate-400">{{ docHint }}</p>
+            <p v-if="docError" class="mt-1 text-xs text-rose-400">{{ docError }}</p>
           </label>
           <label class="space-y-2 text-sm text-slate-300">
             <span>Nationality</span>
-            <input v-model="form.nationality" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Saudi Arabia" />
+            <div class="relative">
+              <input v-model="form.nationality" @input="searchCountries" @focus="showCountryList = true" @blur="hideCountryListDelayed" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Type country name..." autocomplete="off" />
+              <ul v-if="showCountryList && filteredCountries.length" class="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-white/10 bg-slate-800 shadow-xl">
+                <li v-for="c in filteredCountries" :key="c.alpha_2" class="cursor-pointer px-3 py-2 text-sm text-slate-200 hover:bg-blue-500/20" @mousedown.prevent="selectCountry(c)">{{ c.country_name }}</li>
+              </ul>
+            </div>
           </label>
           <label class="space-y-2 text-sm text-slate-300">
             <span>ID Expiry Date</span>
@@ -108,8 +111,9 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import PageHeader from '../components/PageHeader.vue'
+import { api } from '../lib/api'
 
 const props = defineProps({ user: Object, saveProfile: Function })
 
@@ -117,6 +121,60 @@ const loading = ref(false)
 const message = ref('')
 const error = ref(false)
 const form = reactive({ first_name: '', last_name: '', mobile_no: '', id_document_type: '', id_no: '', nationality: '', id_expiry_date: '', id_document: '' })
+
+const countries = ref([])
+const docTypes = ref([])
+const showCountryList = ref(false)
+const filteredCountries = ref([])
+const docFormat = ref(null)
+const docError = ref('')
+let hideCountryTimer = null
+
+const docBorderClass = computed(() => {
+  if (!form.id_no || !form.id_document_type) return 'border border-white/10 bg-white/5'
+  return docError.value ? 'border-rose-400/50 bg-rose-500/10' : 'border-emerald-400/50 bg-emerald-500/10'
+})
+const docPlaceholder = computed(() => docFormat.value?.placeholder || 'Document number')
+const docHint = computed(() => {
+  if (!docFormat.value || !form.id_document_type) return ''
+  return docFormat.value.description || `Format: ${docFormat.value.pattern || docFormat.value.placeholder}`
+})
+
+onMounted(async () => {
+  try { countries.value = await api.countryList() } catch {}
+  try { docTypes.value = await api.documentTypes() } catch {}
+})
+
+function searchCountries() {
+  const q = (form.nationality || '').toLowerCase()
+  if (!q) { filteredCountries.value = countries.value.slice(0, 20); return }
+  filteredCountries.value = countries.value.filter(c => c.country_name.toLowerCase().includes(q)).slice(0, 20)
+  showCountryList.value = true
+}
+
+function hideCountryListDelayed() {
+  hideCountryTimer = setTimeout(() => { showCountryList.value = false }, 200)
+}
+
+function selectCountry(c) {
+  form.nationality = c.country_name
+  showCountryList.value = false
+  clearTimeout(hideCountryTimer)
+  if (form.id_document_type) validateDocNumber()
+}
+
+async function validateDocNumber() {
+  const alpha2 = countries.value.find(c => c.country_name === form.nationality)?.alpha_2
+  const docType = form.id_document_type
+  const value = form.id_no
+  if (!alpha2 || !docType) { docFormat.value = null; docError.value = ''; return }
+  if (!value) { docError.value = ''; return }
+  try {
+    const result = await api.validateDocument(alpha2, docType, value)
+    docFormat.value = result.format
+    docError.value = result.valid ? '' : (result.error || 'Invalid format')
+  } catch { docError.value = '' }
+}
 
 watch(
   () => props.user,

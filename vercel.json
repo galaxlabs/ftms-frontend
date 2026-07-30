@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://ftms.galaxylabs.online/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
