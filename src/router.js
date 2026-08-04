@@ -1,5 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from './layouts/AppLayout.vue'
+import DashboardPage from './pages/DashboardPage.vue'
+import JoinRequestsPage from './pages/JoinRequestsPage.vue'
+import RecordsPage from './pages/RecordsPage.vue'
+import RoutesPage from './pages/RoutesPage.vue'
+import ProfileSettingsPage from './pages/ProfileSettingsPage.vue'
 import TripDetailPage from './pages/TripDetailPage.vue'
 
 const routes = [
@@ -7,19 +12,19 @@ const routes = [
     path: '/',
     component: AppLayout,
     children: [
-      { path: '', name: 'dashboard', meta: { title: 'Dashboard' } },
-      { path: 'companies', name: 'companies', meta: { title: 'Companies' } },
-      { path: 'trips', name: 'trips', meta: { title: 'Trips' } },
-      { path: 'bookings', name: 'bookings', meta: { title: 'Bookings' } },
-      { path: 'customers', name: 'customers', meta: { title: 'Customers' } },
-      { path: 'invoices', name: 'invoices', meta: { title: 'Invoices' } },
-      { path: 'contracts', name: 'contracts', meta: { title: 'Contracts' } },
-      { path: 'vehicles', name: 'vehicles', meta: { title: 'Vehicles' } },
-      { path: 'captains', name: 'captains', meta: { title: 'Captains' } },
-      { path: 'join_requests', name: 'join_requests', meta: { title: 'Join Requests' } },
-      { path: 'expenses', name: 'expenses', meta: { title: 'Expenses' } },
-      { path: 'routes', name: 'routes', meta: { title: 'Routes' } },
-      { path: 'settings', name: 'settings', meta: { title: 'Settings' } },
+      { path: '', name: 'dashboard', component: DashboardPage, meta: { title: 'Dashboard', recordKey: 'dashboard' } },
+      { path: 'companies', name: 'companies', component: RecordsPage, meta: { title: 'Companies', recordKey: 'companies' } },
+      { path: 'trips', name: 'trips', component: RecordsPage, meta: { title: 'Trips', recordKey: 'trips' } },
+      { path: 'bookings', name: 'bookings', component: RecordsPage, meta: { title: 'Bookings', recordKey: 'bookings' } },
+      { path: 'customers', name: 'customers', component: RecordsPage, meta: { title: 'Customers', recordKey: 'customers' } },
+      { path: 'invoices', name: 'invoices', component: RecordsPage, meta: { title: 'Invoices', recordKey: 'invoices' } },
+      { path: 'contracts', name: 'contracts', component: RecordsPage, meta: { title: 'Contracts', recordKey: 'contracts' } },
+      { path: 'vehicles', name: 'vehicles', component: RecordsPage, meta: { title: 'Vehicles', recordKey: 'vehicles' } },
+      { path: 'captains', name: 'captains', component: RecordsPage, meta: { title: 'Captains', recordKey: 'captains' } },
+      { path: 'join_requests', name: 'join_requests', component: JoinRequestsPage, meta: { title: 'Join Requests', recordKey: 'joinRequests' } },
+      { path: 'expenses', name: 'expenses', component: RecordsPage, meta: { title: 'Expenses', recordKey: 'expenses' } },
+      { path: 'routes', name: 'routes', component: RoutesPage, meta: { title: 'Routes', recordKey: 'routes' } },
+      { path: 'settings', name: 'settings', component: ProfileSettingsPage, meta: { title: 'Settings' } },
     ],
   },
   {

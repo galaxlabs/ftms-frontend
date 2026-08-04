@@ -52,7 +52,17 @@
       <section class="flex-1 overflow-y-auto p-4 sm:p-6">
         <div v-if="loadError" class="mb-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ loadError }}</div>
         <div v-if="saveMessage" class="mb-4 rounded-2xl border px-4 py-3 text-sm" :class="saveError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">{{ saveMessage }}</div>
-        <router-view :key="route.fullPath" />
+        <router-view v-slot="{ Component }">
+          <component
+            :is="Component"
+            :key="route.fullPath"
+            v-bind="pageProps"
+            @refresh="loadData"
+            @create="createRecord"
+            @approve="approveJoinRequest"
+            @reject="rejectJoinRequest"
+          />
+        </router-view>
       </section>
     </main>
   </div>
@@ -164,6 +174,20 @@ const nav = [
 const active = ref('dashboard')
 const selectedCompany = ref('')
 const companies = ref([{ name: 'default', company_name: 'Default Company' }])
+const records = ref({
+  dashboard: { cards: {}, activity: [] },
+  companies: [],
+  trips: [],
+  bookings: [],
+  customers: [],
+  invoices: [],
+  contracts: [],
+  vehicles: [],
+  captains: [],
+  joinRequests: [],
+  expenses: [],
+  routes: [],
+})
 const loadError = ref('')
 const saveMessage = ref('')
 const saveError = ref(false)
@@ -181,6 +205,26 @@ const signupError = ref(false)
 const signupForm = ref({ email: '', username: '', first_name: '', last_name: '', password: '', confirm_password: '' })
 
 const pageTitle = computed(() => nav.find((item) => item.key === active.value)?.label || 'Dashboard')
+const recordConfig = {
+  companies: { title: 'Companies', eyebrow: 'Tenants', description: 'Transportation companies and tenant records.', columns: [{ label: 'Name', key: 'name' }, { label: 'Company', key: 'company_name' }, { label: 'Phone', key: 'phone_no' }, { label: 'Email', key: 'email' }] },
+  trips: { title: 'Trips', eyebrow: 'Operations', description: 'Scheduled and running trip records.', columns: [{ label: 'Trip', key: 'trip_title' }, { label: 'Date', key: 'trip_date' }, { label: 'Route', key: 'route' }, { label: 'Status', key: 'trip_status', type: 'status' }] },
+  bookings: { title: 'Bookings', eyebrow: 'Ride App', description: 'Passenger bookings and ride requests.', columns: [{ label: 'Booking', key: 'booking_title' }, { label: 'Customer', key: 'customer_name' }, { label: 'Date', key: 'booking_date' }, { label: 'Status', key: 'booking_status', type: 'status' }] },
+  customers: { title: 'Customers', eyebrow: 'People', description: 'Customer and passenger profiles.', columns: [{ label: 'Name', key: 'customer_name' }, { label: 'Mobile', key: 'mobile_no' }, { label: 'Email', key: 'email_id' }, { label: 'Company', key: 'company' }] },
+  invoices: { title: 'Invoices', eyebrow: 'ZATCA', description: 'Billing, VAT and invoice status.', columns: [{ label: 'Invoice', key: 'name' }, { label: 'Date', key: 'invoice_date' }, { label: 'Total', key: 'grand_total' }, { label: 'Status', key: 'status', type: 'status' }] },
+  contracts: { title: 'Contracts', eyebrow: 'B2B', description: 'Contracted transport demand.', columns: [{ label: 'Contract', key: 'name' }, { label: 'Customer', key: 'customer' }, { label: 'Start', key: 'start_date' }, { label: 'Status', key: 'status', type: 'status' }] },
+  vehicles: { title: 'Vehicles', eyebrow: 'Fleet', description: 'Registered vehicles and capacity.', columns: [{ label: 'Vehicle', key: 'vehicle_name' }, { label: 'Plate', key: 'plate_no' }, { label: 'Type', key: 'vehicle_type' }, { label: 'Status', key: 'status', type: 'status' }] },
+  captains: { title: 'Captains', eyebrow: 'Drivers', description: 'Captain profiles and onboarding state.', columns: [{ label: 'Captain', key: 'full_name' }, { label: 'Mobile', key: 'mobile_no' }, { label: 'City', key: 'city' }, { label: 'Status', key: 'status', type: 'status' }] },
+  expenses: { title: 'Expenses', eyebrow: 'OCR', description: 'Operational expense records.', columns: [{ label: 'Expense', key: 'name' }, { label: 'Date', key: 'expense_date' }, { label: 'Amount', key: 'amount' }, { label: 'Status', key: 'status', type: 'status' }] },
+}
+const pageProps = computed(() => {
+  const key = route.meta.recordKey
+  if (key === 'dashboard') return { dashboard: records.value.dashboard }
+  if (key === 'routes') return { rows: records.value.routes }
+  if (key === 'joinRequests') return { rows: records.value.joinRequests }
+  if (!key) return { user: currentUser.value }
+  const config = recordConfig[key] || { title: pageTitle.value, columns: [{ label: 'Name', key: 'name' }] }
+  return { ...config, rows: records.value[key] || [] }
+})
 
 function navigate(key) {
   active.value = key
@@ -200,7 +244,7 @@ async function loadCurrentUser() {
 async function loadData() {
   loadError.value = ''
   try {
-    await Promise.all([
+    const [dashboard, trips, bookings, customers, invoices, contracts, vehicles, captains, expenses, routes, joinRequests] = await Promise.all([
       api.dashboard(selectedCompany.value),
       api.trips(selectedCompany.value, 50),
       api.bookings(selectedCompany.value, 50),
@@ -213,7 +257,27 @@ async function loadData() {
       api.routes(selectedCompany.value, 50),
       currentUser.value?.is_authenticated ? api.joinRequests(selectedCompany.value, 'Pending').catch(() => []) : Promise.resolve([]),
     ])
+    records.value = { ...records.value, dashboard, companies: companies.value, trips, bookings, customers, invoices, contracts, vehicles, captains, expenses, routes, joinRequests }
   } catch (error) { loadError.value = String(error?.message || error) }
+}
+
+async function createRecord(row) {
+  const key = route.meta.recordKey
+  if (!key || !api[`create${key.charAt(0).toUpperCase()}${key.slice(1, -1)}`]) {
+    records.value[key] = [row, ...(records.value[key] || [])]
+    return
+  }
+  records.value[key] = [row, ...(records.value[key] || [])]
+}
+
+async function approveJoinRequest(name) {
+  await api.approveJoinRequest(name, '')
+  await loadData()
+}
+
+async function rejectJoinRequest(name) {
+  await api.rejectJoinRequest(name, '')
+  await loadData()
 }
 
 function closeLogin() { showLogin.value = false; loginMessage.value = ''; loginError.value = false }
