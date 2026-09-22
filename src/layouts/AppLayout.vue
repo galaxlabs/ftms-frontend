@@ -82,8 +82,8 @@
       </div>
       <div class="mt-5 space-y-4">
         <label class="block space-y-2 text-sm text-slate-300">
-          <span>Email</span>
-          <input v-model="loginForm.usr" required type="email" autocomplete="username" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="admin@company.com" />
+          <span>Username or email</span>
+          <input v-model="loginForm.usr" required type="text" autocomplete="username" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Administrator or admin@company.com" />
         </label>
         <label class="block space-y-2 text-sm text-slate-300">
           <span>Password</span>
