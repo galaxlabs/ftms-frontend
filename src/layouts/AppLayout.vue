@@ -16,6 +16,9 @@
         <button @click="showSignup = true" class="rounded-xl border border-white/10 px-8 py-3 text-sm font-medium text-white hover:bg-white/5">
           Create account
         </button>
+        <button @click="router.push({ name: 'driver-demo' })" class="rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-8 py-3 text-sm font-medium text-emerald-100 hover:bg-emerald-400/15">
+          Driver demo
+        </button>
       </div>
 
       <div class="mt-6">
@@ -157,6 +160,7 @@ const route = useRoute()
 
 const nav = [
   { key: 'dashboard', label: 'Dashboard', short: 'Overview' },
+  { key: 'driver', label: 'Driver', short: 'Cash + VAT' },
   { key: 'companies', label: 'Companies', short: 'Tenants' },
   { key: 'trips', label: 'Trips', short: 'Operations' },
   { key: 'bookings', label: 'Bookings', short: 'Ride app' },
@@ -219,6 +223,7 @@ const recordConfig = {
 const pageProps = computed(() => {
   const key = route.meta.recordKey
   if (key === 'dashboard') return { dashboard: records.value.dashboard }
+  if (key === 'driver') return {}
   if (key === 'routes') return { rows: records.value.routes }
   if (key === 'joinRequests') return { rows: records.value.joinRequests }
   if (!key) return { user: currentUser.value }

@@ -6,6 +6,7 @@ import RecordsPage from './pages/RecordsPage.vue'
 import RoutesPage from './pages/RoutesPage.vue'
 import ProfileSettingsPage from './pages/ProfileSettingsPage.vue'
 import TripDetailPage from './pages/TripDetailPage.vue'
+import DriverWorkspacePage from './pages/DriverWorkspacePage.vue'
 
 const routes = [
   {
@@ -13,6 +14,7 @@ const routes = [
     component: AppLayout,
     children: [
       { path: '', name: 'dashboard', component: DashboardPage, meta: { title: 'Dashboard', recordKey: 'dashboard' } },
+      { path: 'driver', name: 'driver', component: DriverWorkspacePage, meta: { title: 'Driver Workspace', recordKey: 'driver' } },
       { path: 'companies', name: 'companies', component: RecordsPage, meta: { title: 'Companies', recordKey: 'companies' } },
       { path: 'trips', name: 'trips', component: RecordsPage, meta: { title: 'Trips', recordKey: 'trips' } },
       { path: 'bookings', name: 'bookings', component: RecordsPage, meta: { title: 'Bookings', recordKey: 'bookings' } },
@@ -26,6 +28,12 @@ const routes = [
       { path: 'routes', name: 'routes', component: RoutesPage, meta: { title: 'Routes', recordKey: 'routes' } },
       { path: 'settings', name: 'settings', component: ProfileSettingsPage, meta: { title: 'Settings' } },
     ],
+  },
+  {
+    path: '/driver-demo',
+    name: 'driver-demo',
+    component: DriverWorkspacePage,
+    meta: { public: true, title: 'Driver Workspace Demo' },
   },
   {
     path: '/trip/:uuid',
