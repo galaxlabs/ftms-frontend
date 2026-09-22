@@ -1,6 +1,6 @@
 <template>
   <!-- Guest Landing -->
-  <div v-if="!currentUser.is_authenticated && !loadError" class="flex min-h-screen items-center justify-center bg-slate-950 p-4">
+  <div v-if="!currentUser.is_authenticated" class="flex min-h-screen items-center justify-center bg-slate-950 p-4">
     <div class="w-full max-w-lg text-center">
       <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-blue-500/25">
         F
@@ -248,6 +248,24 @@ async function loadCurrentUser() {
 
 async function loadData() {
   loadError.value = ''
+  if (!currentUser.value?.is_authenticated) {
+    records.value = {
+      ...records.value,
+      dashboard: { cards: {}, activity: [] },
+      companies: companies.value,
+      trips: [],
+      bookings: [],
+      customers: [],
+      invoices: [],
+      contracts: [],
+      vehicles: [],
+      captains: [],
+      expenses: [],
+      routes: [],
+      joinRequests: [],
+    }
+    return
+  }
   try {
     const [dashboard, trips, bookings, customers, invoices, contracts, vehicles, captains, expenses, routes, joinRequests] = await Promise.all([
       api.dashboard(selectedCompany.value),
