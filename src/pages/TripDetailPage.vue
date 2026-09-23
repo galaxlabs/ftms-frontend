@@ -291,10 +291,23 @@ async function handleScanFiles(event) {
   scanError.value = true
   scanMessage.value = extracted.length
     ? `Prepared ${extracted.length} passenger row(s). Review before merging into Kashf.`
-    : 'No readable passenger data was detected. Add the passenger manually or rename files like NAME-PASSPORT-NATIONALITY.'
+    : 'No readable passenger data was detected. Log in for AI OCR, add manually, or rename files like NAME-PASSPORT-NATIONALITY.'
 }
 
 async function extractPassengersFromFile(file) {
+  if (file.type?.startsWith('image/')) {
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      const result = await api.extractPassengerDocument(dataUrl, file.type)
+      const passengers = Array.isArray(result?.passengers) ? result.passengers : []
+      if (passengers.length) {
+        return passengers.map((row) => normalizePassenger({ ...row, status: 'Scanned' }, 'ai')).filter(Boolean)
+      }
+    } catch (error) {
+      scanError.value = true
+      scanMessage.value = 'AI OCR is unavailable for this scan. Using filename/manual fallback.'
+    }
+  }
   const baseName = file.name.replace(/\.[^.]+$/, '')
   const cleaned = baseName.replace(/[_]+/g, '-').replace(/\s+/g, ' ').trim()
   const parts = cleaned.split('-').map((part) => part.trim()).filter(Boolean)
@@ -316,6 +329,15 @@ async function extractPassengersFromFile(file) {
     }, 'scan')].filter(Boolean)
   }
   return []
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(reader.error || new Error('Could not read file'))
+    reader.readAsDataURL(file)
+  })
 }
 
 function titleCase(value) {

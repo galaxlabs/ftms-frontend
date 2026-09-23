@@ -82,4 +82,5 @@ export const api = {
   documentFormat: (alpha_2, doc_type) => call('ftms.country.id_format.get_document_format', { alpha_2, doc_type }),
   validateDocument: (alpha_2, doc_type, value) => call('ftms.country.id_format.validate_document_number', { alpha_2, doc_type, value }),
   countryInfo: (alpha_2) => call('ftms.country.registry.get_country_info', { alpha_2 }),
+  extractPassengerDocument: (file_data, mime_type) => call('ftms.api.document_ai.extract_passenger_document', { file_data, mime_type }),
 }
