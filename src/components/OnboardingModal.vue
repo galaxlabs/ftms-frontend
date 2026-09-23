@@ -48,32 +48,6 @@
             <span>Mobile no.</span>
             <input v-model="form.mobile_no" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="+966 5X XXX XXXX" />
           </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>Nationality</span>
-            <div class="relative">
-              <input v-model="form.nationality" @input="searchCountries" @focus="showCountryList = true" @blur="hideCountryListDelayed" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" placeholder="Type country name..." autocomplete="off" />
-              <ul v-if="showCountryList && filteredCountries.length" class="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-white/10 bg-slate-800 shadow-xl">
-                <li v-for="c in filteredCountries" :key="c.alpha_2" class="cursor-pointer px-3 py-2 text-sm text-slate-200 hover:bg-blue-500/20" @mousedown.prevent="selectCountry(c)">{{ c.country_name }}</li>
-              </ul>
-            </div>
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>ID type</span>
-            <select v-model="form.id_document_type" @change="validateDocNumber" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400">
-              <option value="">Select</option>
-              <option v-for="dt in docTypes" :key="dt" :value="dt">{{ dt }}</option>
-            </select>
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>ID number</span>
-            <input v-model="form.id_number" @input="validateDocNumber" class="w-full rounded-xl border px-3 py-2 text-white outline-none focus:border-blue-400" :class="docBorderClass" :placeholder="docPlaceholder" />
-            <p v-if="docHint" class="mt-1 text-xs text-slate-400">{{ docHint }}</p>
-            <p v-if="docError" class="mt-1 text-xs text-rose-400">{{ docError }}</p>
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>ID expiry</span>
-            <input v-model="form.id_expiry_date" type="date" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-blue-400" />
-          </label>
         </div>
         <div v-if="message" class="mt-4 rounded-2xl border px-4 py-3 text-sm" :class="isError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">{{ message }}</div>
         <div class="mt-5 flex justify-end gap-2">
