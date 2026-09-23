@@ -7,6 +7,7 @@ import RoutesPage from './pages/RoutesPage.vue'
 import ProfileSettingsPage from './pages/ProfileSettingsPage.vue'
 import TripDetailPage from './pages/TripDetailPage.vue'
 import DriverWorkspacePage from './pages/DriverWorkspacePage.vue'
+import TripScannerPage from './pages/TripScannerPage.vue'
 
 const routes = [
   {
@@ -15,6 +16,7 @@ const routes = [
     children: [
       { path: '', name: 'dashboard', component: DashboardPage, meta: { title: 'Dashboard', recordKey: 'dashboard' } },
       { path: 'driver', name: 'driver', component: DriverWorkspacePage, meta: { title: 'Driver Workspace', recordKey: 'driver' } },
+      { path: 'trip-scanner', name: 'trip-scanner', component: TripScannerPage, meta: { title: 'Trip Scanner', recordKey: 'tripScanner' } },
       { path: 'companies', name: 'companies', component: RecordsPage, meta: { title: 'Companies', recordKey: 'companies' } },
       { path: 'trips', name: 'trips', component: RecordsPage, meta: { title: 'Trips', recordKey: 'trips' } },
       { path: 'bookings', name: 'bookings', component: RecordsPage, meta: { title: 'Bookings', recordKey: 'bookings' } },

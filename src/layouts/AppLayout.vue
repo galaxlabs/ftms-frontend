@@ -161,6 +161,7 @@ const route = useRoute()
 const nav = [
   { key: 'dashboard', label: 'Dashboard', short: 'Overview' },
   { key: 'driver', label: 'Driver', short: 'Cash + VAT' },
+  { key: 'trip-scanner', label: 'Scanner', short: 'Kashf' },
   { key: 'companies', label: 'Companies', short: 'Tenants' },
   { key: 'trips', label: 'Trips', short: 'Operations' },
   { key: 'bookings', label: 'Bookings', short: 'Ride app' },
@@ -224,6 +225,7 @@ const pageProps = computed(() => {
   const key = route.meta.recordKey
   if (key === 'dashboard') return { dashboard: records.value.dashboard }
   if (key === 'driver') return { user: currentUser.value, companies: companies.value, selectedCompany: selectedCompany.value }
+  if (key === 'tripScanner') return { selectedCompany: selectedCompany.value }
   if (key === 'routes') return { rows: records.value.routes }
   if (key === 'joinRequests') return { rows: records.value.joinRequests }
   if (!key) return { user: currentUser.value }

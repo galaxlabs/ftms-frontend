@@ -55,6 +55,7 @@ export const api = {
   createCustomer: (payload) => call('ftms.api.customer.create_customer', payload),
   trips: (company, limit = 20) => call('ftms.api.trip.list_trips', { company, limit }),
   createTrip: (payload) => call('ftms.api.trip.create_trip', payload),
+  createTripWithPassengers: (payload) => call('ftms.api.trip.create_trip_with_passengers', payload),
   bookings: (company, limit = 20) => call('ftms.api.booking.list_bookings', { company, limit }),
   createBooking: (payload) => call('ftms.api.booking.create_booking', payload),
   invoices: (company, limit = 20) => call('ftms.api.invoice.list_invoices', { company, limit }),
