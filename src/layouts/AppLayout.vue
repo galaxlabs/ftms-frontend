@@ -223,7 +223,7 @@ const recordConfig = {
 const pageProps = computed(() => {
   const key = route.meta.recordKey
   if (key === 'dashboard') return { dashboard: records.value.dashboard }
-  if (key === 'driver') return {}
+  if (key === 'driver') return { user: currentUser.value, companies: companies.value, selectedCompany: selectedCompany.value }
   if (key === 'routes') return { rows: records.value.routes }
   if (key === 'joinRequests') return { rows: records.value.joinRequests }
   if (!key) return { user: currentUser.value }

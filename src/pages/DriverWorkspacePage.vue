@@ -36,12 +36,19 @@
               </span>
             </div>
 
-            <label class="mt-5 block text-sm text-slate-300">
+            <label v-if="isDemo" class="mt-5 block text-sm text-slate-300">
               <span>Switch demo company</span>
               <select v-model="selectedCompanyId" class="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-emerald-300">
-                <option v-for="company in demoCompanies" :key="company.id" :value="company.id" class="bg-slate-950">{{ company.name }}</option>
+                <option v-for="company in visibleCompanies" :key="company.id" :value="company.id" class="bg-slate-950">{{ company.name }}</option>
               </select>
             </label>
+
+            <div v-else class="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Company locked</div>
+              <div class="mt-2 text-sm leading-6 text-slate-300">
+                Drivers can only see bookings, cash, VAT and subscription status for their linked company.
+              </div>
+            </div>
 
             <div class="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
               <div class="flex items-center justify-between gap-3">
@@ -73,6 +80,7 @@
             <div>
               <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Website queue</div>
               <h2 class="mt-1 text-2xl font-bold">Booking intake</h2>
+              <p class="mt-1 text-sm text-slate-400">Read-only operations queue. Customers do not book from this driver screen.</p>
             </div>
             <span class="rounded-full bg-amber-300/15 px-3 py-1 text-xs text-amber-100">{{ pendingBookings.length }} pending</span>
           </div>
@@ -153,7 +161,7 @@
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Demo data</div>
           <h2 class="mt-1 text-2xl font-bold">Companies ready</h2>
           <div class="mt-5 space-y-3">
-            <button v-for="company in demoCompanies" :key="company.id" class="w-full rounded-2xl border p-4 text-left transition" :class="selectedCompanyId === company.id ? 'border-emerald-300/50 bg-emerald-300/10' : 'border-white/10 bg-slate-950/60 hover:bg-white/[0.07]'" @click="selectedCompanyId = company.id">
+            <button v-for="company in visibleCompanies" :key="company.id" class="w-full rounded-2xl border p-4 text-left transition" :class="selectedCompanyId === company.id ? 'border-emerald-300/50 bg-emerald-300/10' : 'border-white/10 bg-slate-950/60 hover:bg-white/[0.07]'" :disabled="!isDemo" @click="isDemo && (selectedCompanyId = company.id)">
               <div class="font-semibold">{{ company.name }}</div>
               <div class="mt-1 text-sm text-slate-400">{{ company.city }} · {{ company.drivers }} drivers · {{ company.vehicles }} vehicles</div>
             </button>
@@ -168,6 +176,12 @@
 import { computed, ref } from 'vue'
 import { api } from '../lib/api'
 
+const props = defineProps({
+  user: { type: Object, default: () => ({}) },
+  companies: { type: Array, default: () => [] },
+  selectedCompany: { type: String, default: '' },
+})
+
 const selectedCompanyId = ref('tamayuz')
 const scenario = ref(0)
 const paying = ref(false)
@@ -179,6 +193,25 @@ const demoCompanies = [
   { id: 'demo', name: 'DEMO Fleet', city: 'Jeddah', vat: '301111222200003', drivers: 5, vehicles: 7, plan: 'Monthly', days: 30, hours: 240 },
   { id: 'digihoopoe', name: 'Digihoopoe Logistics', city: 'Dammam', vat: '302222111100003', drivers: 9, vehicles: 12, plan: 'Custom', days: 180, hours: 1440 },
 ]
+
+const isDemo = computed(() => !props.user?.is_authenticated)
+const ownCompany = computed(() => {
+  if (isDemo.value) return null
+  const companyName = props.user?.company || props.selectedCompany || props.companies?.[0]?.name || 'Linked Company'
+  const companyRecord = props.companies.find((company) => company.name === companyName || company.company_name === companyName) || {}
+  return {
+    id: 'own-company',
+    name: companyRecord.company_name || companyRecord.name || companyName,
+    city: companyRecord.city || companyRecord.location || 'Company workspace',
+    vat: companyRecord.tax_id || companyRecord.vat_no || 'From company profile',
+    drivers: companyRecord.drivers || 1,
+    vehicles: companyRecord.vehicles || 1,
+    plan: 'Company Agreement',
+    days: 30,
+    hours: 240,
+  }
+})
+const visibleCompanies = computed(() => (isDemo.value ? demoCompanies : [ownCompany.value]))
 
 const bookingsByCompany = {
   tamayuz: [
@@ -202,15 +235,22 @@ const drivers = [
   { name: 'Abdul Rahman', car: 'Kia Carnival 2024', plate: 'DMM 7742' },
 ]
 
-const selectedCompany = computed(() => demoCompanies.find((company) => company.id === selectedCompanyId.value) || demoCompanies[0])
-const bookings = computed(() => bookingsByCompany[selectedCompanyId.value] || [])
+const selectedCompany = computed(() => {
+  if (!isDemo.value) return ownCompany.value
+  return demoCompanies.find((company) => company.id === selectedCompanyId.value) || demoCompanies[0]
+})
+const ownCompanyBookings = computed(() => [
+  { id: 'WEB-001', customer: 'Website Customer', pickup: 'Pickup from website', dropoff: 'Drop-off from website', time: 'Assigned', km: 18, fare: 75, status: 'Assigned', channel: 'Website' },
+  { id: 'WEB-000', customer: 'Completed Website Trip', pickup: 'Company service area', dropoff: 'Customer destination', time: 'Done', km: 14, fare: 60, status: 'Completed', channel: 'Website' },
+])
+const bookings = computed(() => (isDemo.value ? bookingsByCompany[selectedCompanyId.value] || [] : ownCompanyBookings.value))
 const pendingBookings = computed(() => bookings.value.filter((booking) => booking.status !== 'Completed'))
 const completedTrips = computed(() => bookings.value.filter((booking) => booking.status === 'Completed'))
 const activeDriver = computed(() => drivers[scenario.value % drivers.length])
 const vatRate = 0.15
 
 const subscription = computed(() => ({
-  active: selectedCompanyId.value !== 'demo',
+  active: !isDemo.value || selectedCompanyId.value !== 'demo',
   plan: selectedCompany.value.plan,
   days: selectedCompany.value.days,
   hours: selectedCompany.value.hours,
