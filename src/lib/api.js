@@ -71,6 +71,7 @@ export const api = {
   myCaptainProfile: () => call('ftms.api.captain.get_my_profile'),
   expenses: (company, limit = 20) => call('ftms.api.expense.list_expenses', { company, limit }),
   vehicles: (company, limit = 20) => call('ftms.api.vehicle.list_vehicles', { company, limit }),
+  myVehicles: (limit = 50) => call('ftms.api.vehicle.list_my_vehicles', { limit }),
   createVehicle: (payload) => call('ftms.api.vehicle.create_vehicle', payload),
   vehicleMakes: () => call('ftms.api.vehicle.list_vehicle_makes'),
   vehicleModels: (make) => call('ftms.api.vehicle.list_vehicle_models', { make }),

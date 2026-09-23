@@ -27,13 +27,14 @@
           <aside class="rounded-[1.5rem] border border-white/10 bg-slate-950/70 p-4">
             <div class="flex items-start justify-between gap-3">
               <div>
-                <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Demo tenant</div>
-                <h2 class="mt-1 text-2xl font-bold">{{ selectedCompany.name }}</h2>
-                <p class="mt-1 text-sm text-slate-400">{{ selectedCompany.city }} · VAT {{ selectedCompany.vat }}</p>
+                <div class="text-xs uppercase tracking-[0.25em] text-slate-500">{{ isDemo ? 'Demo tenant' : 'Driver profile' }}</div>
+                <h2 class="mt-1 text-2xl font-bold">{{ isDemo ? selectedCompany.name : driverDetails.fullName }}</h2>
+                <p class="mt-1 text-sm text-slate-400">{{ isDemo ? `${selectedCompany.city} · VAT ${selectedCompany.vat}` : driverDetails.subtitle }}</p>
               </div>
-              <span :class="['rounded-full px-3 py-1 text-xs font-semibold', subscription.active ? 'bg-emerald-400/15 text-emerald-200' : 'bg-rose-400/15 text-rose-200']">
+              <span v-if="isDemo" :class="['rounded-full px-3 py-1 text-xs font-semibold', subscription.active ? 'bg-emerald-400/15 text-emerald-200' : 'bg-rose-400/15 text-rose-200']">
                 {{ subscription.active ? 'Active' : 'Payment due' }}
               </span>
+              <span v-else class="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-200">Own details only</span>
             </div>
 
             <label v-if="isDemo" class="mt-5 block text-sm text-slate-300">
@@ -46,11 +47,11 @@
             <div v-else class="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
               <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Company locked</div>
               <div class="mt-2 text-sm leading-6 text-slate-300">
-                Drivers can only see bookings, cash, VAT and subscription status for their linked company.
+                Drivers can only see their own driver profile and vehicles assigned to them.
               </div>
             </div>
 
-            <div class="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div v-if="isDemo" class="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
               <div class="flex items-center justify-between gap-3">
                 <div>
                   <div class="text-sm font-semibold">Subscription agreement</div>
@@ -74,7 +75,51 @@
         {{ paymentMessage }}
       </div>
 
-      <section class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <section v-if="!isDemo" class="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+        <div class="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5">
+          <div class="text-xs uppercase tracking-[0.25em] text-slate-500">My driver details</div>
+          <h2 class="mt-1 text-2xl font-bold">{{ driverDetails.fullName }}</h2>
+          <div class="mt-5 space-y-3 text-sm">
+            <div v-for="item in driverInfo" :key="item.label" class="flex justify-between gap-4 rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <span class="text-slate-500">{{ item.label }}</span>
+              <span class="text-right font-semibold text-white">{{ item.value || 'Not set' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs uppercase tracking-[0.25em] text-slate-500">My vehicles</div>
+              <h2 class="mt-1 text-2xl font-bold">Assigned or owned vehicles</h2>
+            </div>
+            <span class="rounded-full bg-sky-400/15 px-3 py-1 text-xs text-sky-100">{{ ownVehicles.length }} vehicles</span>
+          </div>
+          <div v-if="vehicleError" class="mt-4 rounded-2xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{{ vehicleError }}</div>
+          <div v-else-if="!ownVehicles.length" class="mt-5 rounded-2xl border border-white/10 bg-slate-950/60 p-5 text-sm text-slate-400">
+            No vehicle is currently assigned to your driver account.
+          </div>
+          <div v-else class="mt-5 grid gap-3 md:grid-cols-2">
+            <article v-for="vehicle in ownVehicles" :key="vehicle.name" class="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">{{ vehicle.vehicle_name || vehicle.name }}</div>
+                  <div class="mt-1 text-sm text-slate-400">{{ vehicle.plate_no || 'No plate' }}</div>
+                </div>
+                <span :class="statusClass(vehicle.status)">{{ vehicle.status || 'Unknown' }}</span>
+              </div>
+              <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div><div class="text-slate-500">Make</div><div class="font-semibold">{{ vehicle.vehicle_make || 'Not set' }}</div></div>
+                <div><div class="text-slate-500">Model</div><div class="font-semibold">{{ vehicle.vehicle_model || 'Not set' }}</div></div>
+                <div><div class="text-slate-500">Type</div><div class="font-semibold">{{ vehicle.vehicle_type || 'Not set' }}</div></div>
+                <div><div class="text-slate-500">Capacity</div><div class="font-semibold">{{ vehicle.passenger_capacity || 'Not set' }}</div></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section v-else class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <div class="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5">
           <div class="flex items-center justify-between gap-3">
             <div>
@@ -145,7 +190,7 @@
         </div>
       </section>
 
-      <section class="grid gap-5 lg:grid-cols-3">
+      <section v-if="isDemo" class="grid gap-5 lg:grid-cols-3">
         <div class="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-5 lg:col-span-2">
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Compliance flow</div>
           <h2 class="mt-1 text-2xl font-bold">Why bookings stay on your website</h2>
@@ -173,7 +218,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { api } from '../lib/api'
 
 const props = defineProps({
@@ -187,6 +232,8 @@ const scenario = ref(0)
 const paying = ref(false)
 const paymentMessage = ref('')
 const paymentError = ref(false)
+const ownVehicles = ref([])
+const vehicleError = ref('')
 
 const demoCompanies = [
   { id: 'tamayuz', name: 'Tamayuz Transport', city: 'Riyadh', vat: '300998877600003', drivers: 18, vehicles: 24, plan: 'Yearly', days: 365, hours: 2920 },
@@ -239,6 +286,21 @@ const selectedCompany = computed(() => {
   if (!isDemo.value) return ownCompany.value
   return demoCompanies.find((company) => company.id === selectedCompanyId.value) || demoCompanies[0]
 })
+const captainProfile = computed(() => props.user?.captain_profile || {})
+const driverDetails = computed(() => ({
+  fullName: captainProfile.value.full_name || props.user?.full_name || props.user?.email || 'Driver',
+  subtitle: [captainProfile.value.status, captainProfile.value.current_company || props.user?.company].filter(Boolean).join(' · ') || 'Driver account',
+}))
+const driverInfo = computed(() => [
+  { label: 'Name', value: driverDetails.value.fullName },
+  { label: 'Mobile', value: captainProfile.value.mobile_no || props.user?.mobile_no },
+  { label: 'Nationality', value: captainProfile.value.nationality || props.user?.nationality },
+  { label: 'ID / Iqama', value: captainProfile.value.iqama_no || captainProfile.value.national_id || props.user?.id_no },
+  { label: 'License No', value: captainProfile.value.license_no },
+  { label: 'License Expiry', value: captainProfile.value.license_expiry_date },
+  { label: 'Driver Card', value: captainProfile.value.driver_card_no },
+  { label: 'City', value: captainProfile.value.city },
+])
 const ownCompanyBookings = computed(() => [
   { id: 'WEB-001', customer: 'Website Customer', pickup: 'Pickup from website', dropoff: 'Drop-off from website', time: 'Assigned', km: 18, fare: 75, status: 'Assigned', channel: 'Website' },
   { id: 'WEB-000', customer: 'Completed Website Trip', pickup: 'Company service area', dropoff: 'Customer destination', time: 'Done', km: 14, fare: 60, status: 'Completed', channel: 'Website' },
@@ -325,4 +387,16 @@ async function payNow() {
     paying.value = false
   }
 }
+
+async function loadOwnVehicles() {
+  if (isDemo.value) return
+  vehicleError.value = ''
+  try {
+    ownVehicles.value = await api.myVehicles(50)
+  } catch (error) {
+    vehicleError.value = String(error?.message || error)
+  }
+}
+
+onMounted(loadOwnVehicles)
 </script>

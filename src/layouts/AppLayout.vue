@@ -38,7 +38,7 @@
       <Topbar
         v-model="selectedCompany"
         :title="pageTitle"
-        :companies="companies"
+        :companies="canSwitchCompany ? companies : []"
         :user="currentUser"
         @login="showLogin = true"
         @logout="logout"
@@ -158,7 +158,7 @@ import OnboardingModal from '../components/OnboardingModal.vue'
 const router = useRouter()
 const route = useRoute()
 
-const nav = [
+const allNav = [
   { key: 'dashboard', label: 'Dashboard', short: 'Overview' },
   { key: 'driver', label: 'Driver', short: 'Cash + VAT' },
   { key: 'trip-scanner', label: 'Scanner', short: 'Kashf' },
@@ -175,6 +175,8 @@ const nav = [
   { key: 'routes', label: 'Routes', short: 'Distance' },
   { key: 'settings', label: 'Settings', short: 'System' },
 ]
+
+const driverNavKeys = new Set(['driver', 'settings'])
 
 const active = ref('dashboard')
 const selectedCompany = ref('')
@@ -209,7 +211,13 @@ const signupMessage = ref('')
 const signupError = ref(false)
 const signupForm = ref({ email: '', username: '', first_name: '', last_name: '', password: '', confirm_password: '' })
 
-const pageTitle = computed(() => nav.find((item) => item.key === active.value)?.label || 'Dashboard')
+const isSystemUser = computed(() => currentUser.value?.roles?.some((role) => ['Administrator', 'System Manager'].includes(role)))
+const isCompanyUser = computed(() => currentUser.value?.roles?.some((role) => ['Company Admin', 'Customer Company', 'Partner', 'Dispatcher', 'Accountant'].includes(role)) || currentUser.value?.capabilities?.company)
+const isDriverUser = computed(() => currentUser.value?.capabilities?.captain && !isSystemUser.value && !isCompanyUser.value)
+const canSwitchCompany = computed(() => !isDriverUser.value)
+const nav = computed(() => (isDriverUser.value ? allNav.filter((item) => driverNavKeys.has(item.key)) : allNav))
+
+const pageTitle = computed(() => nav.value.find((item) => item.key === active.value)?.label || 'Dashboard')
 const recordConfig = {
   companies: { title: 'Companies', eyebrow: 'Tenants', description: 'Transportation companies and tenant records.', columns: [{ label: 'Name', key: 'name' }, { label: 'Company', key: 'company_name' }, { label: 'Phone', key: 'phone_no' }, { label: 'Email', key: 'email' }] },
   trips: { title: 'Trips', eyebrow: 'Operations', description: 'Scheduled and running trip records.', columns: [{ label: 'Trip', key: 'trip_title' }, { label: 'Date', key: 'trip_date' }, { label: 'Route', key: 'route' }, { label: 'Status', key: 'trip_status', type: 'status' }] },
@@ -234,6 +242,7 @@ const pageProps = computed(() => {
 })
 
 function navigate(key) {
+  if (!nav.value.some((item) => item.key === key)) key = nav.value[0]?.key || 'driver'
   active.value = key
   router.push({ name: key })
 }
@@ -255,6 +264,24 @@ async function loadData() {
       ...records.value,
       dashboard: { cards: {}, activity: [] },
       companies: companies.value,
+      trips: [],
+      bookings: [],
+      customers: [],
+      invoices: [],
+      contracts: [],
+      vehicles: [],
+      captains: [],
+      expenses: [],
+      routes: [],
+      joinRequests: [],
+    }
+    return
+  }
+  if (isDriverUser.value) {
+    records.value = {
+      ...records.value,
+      dashboard: { cards: {}, activity: [] },
+      companies: [],
       trips: [],
       bookings: [],
       customers: [],
@@ -352,7 +379,17 @@ async function checkOnboarding() {
 }
 
 watch(selectedCompany, loadData)
-watch(() => route.name, (name) => { if (name && name !== 'trip-detail') active.value = name }, { immediate: true })
+watch(() => route.name, (name) => {
+  if (!name || name === 'trip-detail') return
+  if (currentUser.value?.is_authenticated && !nav.value.some((item) => item.key === name)) {
+    navigate(nav.value[0]?.key || 'driver')
+    return
+  }
+  active.value = name
+}, { immediate: true })
+watch(nav, (items) => {
+  if (currentUser.value?.is_authenticated && items.length && !items.some((item) => item.key === active.value)) navigate(items[0].key)
+})
 onMounted(async () => {
   try { await loadCurrentUser(); await loadCompanies(); await loadData(); await checkOnboarding() }
   catch (error) { loadError.value = String(error?.message || error) }
