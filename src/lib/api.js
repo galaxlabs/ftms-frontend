@@ -85,4 +85,6 @@ export const api = {
   validateDocument: (alpha_2, doc_type, value) => call('ftms.country.id_format.validate_document_number', { alpha_2, doc_type, value }),
   countryInfo: (alpha_2) => call('ftms.country.registry.get_country_info', { alpha_2 }),
   extractPassengerDocument: (file_data, mime_type) => call('ftms.api.document_ai.extract_passenger_document', { file_data, mime_type }),
+  notifications: (limit = 20) => call('ftms.api.notifications.list_my_notifications', { limit }),
+  markNotificationRead: (name) => call('ftms.api.notifications.mark_read', { name }),
 }

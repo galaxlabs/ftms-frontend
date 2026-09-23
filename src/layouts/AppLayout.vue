@@ -70,6 +70,23 @@
     </main>
   </div>
 
+  <div v-if="rideAlert" class="fixed inset-0 z-[60] flex items-end bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
+    <div class="w-full max-w-md rounded-3xl border border-emerald-300/30 bg-slate-900 p-5 text-white shadow-2xl shadow-emerald-950/40">
+      <div class="flex items-start gap-4">
+        <div class="flex h-14 w-14 shrink-0 animate-pulse items-center justify-center rounded-2xl bg-emerald-400 text-2xl font-black text-slate-950">!</div>
+        <div>
+          <div class="text-xs uppercase tracking-[0.25em] text-emerald-200">Incoming ride</div>
+          <h2 class="mt-1 text-2xl font-bold">{{ rideAlert.title }}</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-300">{{ rideAlert.message }}</p>
+        </div>
+      </div>
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <button class="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-300 hover:bg-white/5" @click="dismissRideAlert">Dismiss</button>
+        <button class="rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-emerald-300" @click="openRideAlert">Open Driver</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Login Modal -->
   <div v-if="showLogin" class="fixed inset-0 z-50 flex items-end bg-slate-950/80 p-4 backdrop-blur-sm sm:items-center sm:justify-center" @click.self="closeLogin">
     <form class="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl" @submit.prevent="submitLogin">
@@ -148,7 +165,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '../lib/api'
 import Sidebar from '../components/Sidebar.vue'
@@ -210,6 +227,11 @@ const signupLoading = ref(false)
 const signupMessage = ref('')
 const signupError = ref(false)
 const signupForm = ref({ email: '', username: '', first_name: '', last_name: '', password: '', confirm_password: '' })
+const rideAlert = ref(null)
+const seenNotificationIds = ref(new Set())
+let notificationTimer = null
+let ringAudioContext = null
+let ringOscillator = null
 
 const isSystemUser = computed(() => currentUser.value?.roles?.some((role) => ['Administrator', 'System Manager'].includes(role)))
 const isCompanyUser = computed(() => currentUser.value?.roles?.some((role) => ['Company Admin', 'Customer Company', 'Partner', 'Dispatcher', 'Accountant'].includes(role)) || currentUser.value?.capabilities?.company)
@@ -255,6 +277,7 @@ async function loadCompanies() {
 async function loadCurrentUser() {
   currentUser.value = await api.currentUser()
   if (currentUser.value?.company) selectedCompany.value = currentUser.value.company
+  if (currentUser.value?.is_authenticated && currentUser.value?.capabilities?.captain) startNotificationPolling()
 }
 
 async function loadData() {
@@ -363,11 +386,75 @@ async function submitSignup() {
 async function loginWithGoogle() { window.location.href = await api.getGoogleLoginUrl(window.location.origin) }
 
 async function logout() {
+  stopNotificationPolling()
   await api.logout()
   currentUser.value = { is_authenticated: false }
   selectedCompany.value = companies.value[0]?.name || ''
   active.value = 'dashboard'
   router.push({ name: 'dashboard' })
+}
+
+async function pollNotifications() {
+  if (!currentUser.value?.is_authenticated || !currentUser.value?.capabilities?.captain) return
+  try {
+    const rows = await api.notifications(20)
+    const incoming = rows.find((row) => row.event_type === 'New Ride Request' && !seenNotificationIds.value.has(row.name) && row.status !== 'Read')
+    rows.forEach((row) => seenNotificationIds.value.add(row.name))
+    if (incoming) {
+      rideAlert.value = incoming
+      playRideRing()
+      if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {})
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(incoming.title || 'New ride request', { body: incoming.message, tag: incoming.name })
+      }
+    }
+  } catch {}
+}
+
+function startNotificationPolling() {
+  if (notificationTimer) return
+  pollNotifications()
+  notificationTimer = window.setInterval(pollNotifications, 12000)
+}
+
+function stopNotificationPolling() {
+  if (notificationTimer) window.clearInterval(notificationTimer)
+  notificationTimer = null
+  stopRideRing()
+  rideAlert.value = null
+}
+
+function playRideRing() {
+  stopRideRing()
+  try {
+    ringAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+    ringOscillator = ringAudioContext.createOscillator()
+    const gain = ringAudioContext.createGain()
+    ringOscillator.type = 'sine'
+    ringOscillator.frequency.setValueAtTime(880, ringAudioContext.currentTime)
+    gain.gain.setValueAtTime(0.04, ringAudioContext.currentTime)
+    ringOscillator.connect(gain).connect(ringAudioContext.destination)
+    ringOscillator.start()
+    window.setTimeout(stopRideRing, 6000)
+  } catch {}
+}
+
+function stopRideRing() {
+  try { ringOscillator?.stop() } catch {}
+  try { ringAudioContext?.close() } catch {}
+  ringOscillator = null
+  ringAudioContext = null
+}
+
+async function dismissRideAlert() {
+  stopRideRing()
+  if (rideAlert.value?.name) await api.markNotificationRead(rideAlert.value.name).catch(() => {})
+  rideAlert.value = null
+}
+
+async function openRideAlert() {
+  await dismissRideAlert()
+  navigate('driver')
 }
 
 async function checkOnboarding() {
@@ -394,4 +481,5 @@ onMounted(async () => {
   try { await loadCurrentUser(); await loadCompanies(); await loadData(); await checkOnboarding() }
   catch (error) { loadError.value = String(error?.message || error) }
 })
+onUnmounted(stopNotificationPolling)
 </script>
