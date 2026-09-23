@@ -176,8 +176,17 @@
             <input v-model="captainForm.mobile_no" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="+966 5X XXX XXXX" />
           </label>
           <label class="space-y-2 text-sm text-slate-300">
-            <span>National ID / Iqama</span>
-            <input v-model="captainForm.national_id" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="National ID or Iqama number" />
+            <span>ID document type</span>
+            <select v-model="captainForm.id_document_type" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400">
+              <option value="National ID">Saudi National ID</option>
+              <option value="Iqama">Iqama</option>
+            </select>
+          </label>
+          <label class="space-y-2 text-sm text-slate-300">
+            <span>{{ captainForm.id_document_type === 'Iqama' ? 'Iqama no.' : 'National ID' }}</span>
+            <input v-model="captainForm.identity_number" required inputmode="numeric" class="w-full rounded-xl border px-3 py-2 text-white outline-none focus:border-emerald-400" :class="captainIdError ? 'border-rose-400/50 bg-rose-500/10' : 'border-white/10 bg-white/5'" :placeholder="captainForm.id_document_type === 'Iqama' ? '2123456789' : '1234567890'" @input="validateCaptainId" />
+            <p class="text-xs text-slate-400">Use 10 digits only. Saudi National ID starts with 1; Iqama starts with 2.</p>
+            <p v-if="captainIdError" class="text-xs text-rose-400">{{ captainIdError }}</p>
           </label>
           <label class="space-y-2 text-sm text-slate-300">
             <span>License no.</span>
@@ -189,7 +198,11 @@
           </label>
           <label class="space-y-2 text-sm text-slate-300">
             <span>City</span>
-            <input v-model="captainForm.city" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Riyadh" />
+            <input v-model="captainForm.city" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Riyadh" />
+          </label>
+          <label class="space-y-2 text-sm text-slate-300 sm:col-span-2">
+            <span>Address</span>
+            <input v-model="captainForm.address" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Street, district, city" />
           </label>
         </div>
         <div v-if="message" class="mt-4 rounded-2xl border px-4 py-3 text-sm" :class="isError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">{{ message }}</div>
@@ -277,7 +290,8 @@ async function validateDocNumber() {
   } catch { docError.value = '' }
 }
 const partnerForm = ref({ partner_type: '', service_contract_type: '', company_name: '', legal_name: '', vat_no: '', cr_no: '', phone: '', email: '', address: '' })
-const captainForm = ref({ full_name: '', mobile_no: '', national_id: '', license_no: '', license_expiry_date: '', city: '' })
+const captainForm = ref({ full_name: '', mobile_no: '', id_document_type: 'National ID', nationality: 'Saudi Arabia', identity_number: '', license_no: '', license_expiry_date: '', city: '', address: '' })
+const captainIdError = ref('')
 
 async function selectRole(role) {
   try {
@@ -328,7 +342,14 @@ async function submitPartnerProfile() {
 async function submitCaptainProfile() {
   loading.value = true; message.value = ''; isError.value = false
   try {
-    await api.createCaptainProfile(captainForm.value)
+    if (!validateCaptainId()) throw new Error(captainIdError.value)
+    const identityNumber = normalizeDigits(captainForm.value.identity_number)
+    await api.createCaptainProfile({
+      ...captainForm.value,
+      identity_number: undefined,
+      national_id: captainForm.value.id_document_type === 'National ID' ? identityNumber : '',
+      iqama_no: captainForm.value.id_document_type === 'Iqama' ? identityNumber : '',
+    })
     await api.setUserType('Captain')
     await api.completeOnboarding()
     message.value = 'Captain profile created. You can now request to join a company.'
@@ -336,5 +357,21 @@ async function submitCaptainProfile() {
   } catch (error) {
     isError.value = true; message.value = String(error?.message || error)
   } finally { loading.value = false }
+}
+
+function normalizeDigits(value) {
+  return String(value || '').replace(/\D/g, '')
+}
+
+function validateCaptainId() {
+  const value = normalizeDigits(captainForm.value.identity_number)
+  const isIqama = captainForm.value.id_document_type === 'Iqama'
+  if (!value) { captainIdError.value = 'ID number is required.'; return false }
+  if (!/^\d{10}$/.test(value)) { captainIdError.value = 'ID number must be exactly 10 digits.'; return false }
+  if (isIqama && !value.startsWith('2')) { captainIdError.value = 'Iqama number must start with 2.'; return false }
+  if (!isIqama && !value.startsWith('1')) { captainIdError.value = 'Saudi National ID must start with 1.'; return false }
+  captainIdError.value = ''
+  captainForm.value.identity_number = value
+  return true
 }
 </script>
