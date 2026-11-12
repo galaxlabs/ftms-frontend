@@ -25,3 +25,9 @@ select option:checked {
   background: #2563eb;
   color: #ffffff;
 }
+
+.font-thuluth {
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  font-weight: 700;
+  direction: rtl;
+}

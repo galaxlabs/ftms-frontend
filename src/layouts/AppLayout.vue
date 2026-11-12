@@ -5,7 +5,7 @@
       <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-blue-500/25">
         F
       </div>
-      <h1 class="mt-6 text-3xl font-bold text-white">FTMS</h1>
+      <h1 class="font-thuluth mt-6 text-5xl text-white">شرکۃ النعمانیۃ</h1>
       <p class="mt-2 text-slate-400">Fleet Transportation Management System</p>
       <p class="mt-1 text-sm text-slate-500">Manage trips, fleet, captains & bookings</p>
 
@@ -93,7 +93,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">User Login</div>
-          <h2 class="mt-1 text-2xl font-semibold text-white">Login to FTMS</h2>
+          <h2 class="mt-1 text-2xl font-semibold text-white">Login to شرکۃ النعمانیۃ</h2>
         </div>
         <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="closeLogin">Close</button>
       </div>
@@ -127,7 +127,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Account Creation</div>
-          <h2 class="mt-1 text-2xl font-semibold text-white">Create your FTMS account</h2>
+          <h2 class="mt-1 text-2xl font-semibold text-white">Create your شرکۃ النعمانیۃ account</h2>
           <p class="mt-2 text-sm text-slate-400">Enter your details to get started.</p>
         </div>
         <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="closeSignup">Close</button>
@@ -244,7 +244,7 @@ const pageTitle = computed(() => nav.value.find((item) => item.key === active.va
 const recordConfig = {
   companies: { title: 'Companies', eyebrow: 'Tenants', description: 'Transportation companies and tenant records.', columns: [{ label: 'Name', key: 'name' }, { label: 'Company', key: 'company_name' }, { label: 'Phone', key: 'phone_no' }, { label: 'Email', key: 'email' }] },
   trips: { title: 'Trips', eyebrow: 'Operations', description: 'Scheduled and running trip records.', columns: [{ label: 'Trip', key: 'trip_title' }, { label: 'Date', key: 'trip_date' }, { label: 'Route', key: 'route' }, { label: 'Status', key: 'trip_status', type: 'status' }] },
-  bookings: { title: 'شرکۃ النعمانیۃ', eyebrow: 'Ride App', description: 'Passenger bookings and ride requests.', columns: [{ label: 'Booking', key: 'booking_title' }, { label: 'Customer', key: 'customer_name' }, { label: 'Date', key: 'booking_date' }, { label: 'Status', key: 'booking_status', type: 'status' }] },
+  bookings: { title: 'Bookings', eyebrow: 'Ride App', description: 'Passenger bookings and ride requests.', columns: [{ label: 'Booking', key: 'booking_title' }, { label: 'Customer', key: 'customer_name' }, { label: 'Date', key: 'booking_date' }, { label: 'Status', key: 'booking_status', type: 'status' }] },
   customers: { title: 'Customers', eyebrow: 'People', description: 'Customer and passenger profiles.', columns: [{ label: 'Name', key: 'customer_name' }, { label: 'Mobile', key: 'mobile_no' }, { label: 'Email', key: 'email_id' }, { label: 'Company', key: 'company' }] },
   invoices: { title: 'Invoices', eyebrow: 'ZATCA', description: 'Billing, VAT and invoice status.', columns: [{ label: 'Invoice', key: 'name' }, { label: 'Date', key: 'invoice_date' }, { label: 'Total', key: 'grand_total' }, { label: 'Status', key: 'status', type: 'status' }] },
   contracts: { title: 'Contracts', eyebrow: 'B2B', description: 'Contracted transport demand.', columns: [{ label: 'Contract', key: 'name' }, { label: 'Customer', key: 'customer' }, { label: 'Start', key: 'start_date' }, { label: 'Status', key: 'status', type: 'status' }] },

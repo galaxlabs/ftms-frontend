@@ -15,7 +15,7 @@
 
 <script setup>
 defineProps({
-  eyebrow: { type: String, default: 'FTMS' },
+  eyebrow: { type: String, default: 'شرکۃ النعمانیۃ' },
   title: { type: String, required: true },
   description: { type: String, default: '' },
 })

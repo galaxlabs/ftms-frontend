@@ -2,7 +2,7 @@
   <aside class="hidden w-72 shrink-0 border-r border-white/10 bg-slate-950/80 backdrop-blur-xl lg:block">
     <div class="flex h-full flex-col p-4">
       <div class="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-soft">
-        <div class="text-xs uppercase tracking-[0.35em] text-blue-300">FTMS</div>
+        <div class="font-thuluth text-2xl text-blue-300">شرکۃ النعمانیۃ</div>
         <div class="mt-2 text-lg font-semibold text-white">Transportation Admin</div>
         <div class="mt-1 text-sm text-slate-400">Tenant isolated Vue dashboard</div>
       </div>
