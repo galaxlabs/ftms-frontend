@@ -37,6 +37,7 @@ export const api = {
   subscriptionStatus: () => call('ftms.api.subscription.check_status'),
   subscriptionPlans: () => call('ftms.api.subscription.get_plans'),
   subscribe: () => call('ftms.api.subscription.subscribe'),
+  setOnline: (online) => call('ftms.api.subscription.set_online', { online: online ? 1 : 0 }),
   setRole: (role) => call('ftms.api.onboarding.set_role', { role }),
   createPassengerProfile: (payload) => call('ftms.api.onboarding.create_passenger_profile', payload),
   createPartnerProfile: (payload) => call('ftms.api.onboarding.create_partner_profile', payload),

@@ -3,6 +3,7 @@
     <div class="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.18),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.22),transparent_30%)]"></div>
 
     <main class="relative mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
+      <DriverHomeCard v-if="!isDemo" />
       <header class="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-2xl shadow-black/30 backdrop-blur-xl">
         <div class="grid gap-6 p-5 lg:grid-cols-[1.15fr_0.85fr] lg:p-7">
           <section>
@@ -220,6 +221,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { api } from '../lib/api'
+import DriverHomeCard from '../components/DriverHomeCard.vue'
 
 const props = defineProps({
   user: { type: Object, default: () => ({}) },
