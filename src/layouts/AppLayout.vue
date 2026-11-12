@@ -47,20 +47,48 @@
         @signup="showSignup = true"
       />
 
-      <nav class="flex gap-2 overflow-x-auto border-b border-white/10 bg-slate-950/60 px-4 py-3 lg:hidden" aria-label="Menu">
+      <nav class="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-white/10 bg-slate-950/95 px-3 py-2 backdrop-blur lg:hidden" aria-label="مینو" dir="rtl">
         <button
-          v-for="item in nav"
+          v-for="item in mobileBarItems"
           :key="item.key"
           type="button"
-          class="shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition"
-          :class="active === item.key ? 'bg-blue-500 text-white' : 'border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'"
+          class="flex flex-1 items-center justify-center rounded-2xl py-4 text-lg font-bold transition"
+          :class="active === item.key ? 'bg-blue-500 text-white' : 'text-slate-200 hover:bg-white/10'"
           @click="navigate(item.key)"
         >
-          {{ item.label }}
+          {{ mobileLabels[item.key] || item.label }}
+        </button>
+        <button
+          v-if="hasMoreItems"
+          type="button"
+          class="flex flex-1 items-center justify-center rounded-2xl py-4 text-lg font-bold text-slate-200 transition hover:bg-white/10"
+          @click="showMobileMore = true"
+        >
+          مزید
         </button>
       </nav>
 
-      <section class="flex-1 overflow-y-auto p-4 sm:p-6">
+      <div v-if="showMobileMore" class="fixed inset-0 z-50 flex items-end bg-slate-950/80 p-4 lg:hidden" @click.self="showMobileMore = false">
+        <div class="w-full rounded-3xl border border-white/10 bg-slate-900 p-4" dir="rtl">
+          <div class="mb-3 flex items-center justify-between">
+            <span class="text-xl font-bold text-white">مزید</span>
+            <button type="button" class="rounded-xl border border-white/10 px-4 py-2 text-base text-slate-300" @click="showMobileMore = false">بند کریں</button>
+          </div>
+          <div class="grid gap-2">
+            <button
+              v-for="item in moreItems"
+              :key="item.key"
+              type="button"
+              class="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-right text-lg font-semibold text-white"
+              @click="openFromMore(item.key)"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section class="flex-1 overflow-y-auto p-4 pb-28 sm:p-6 lg:pb-6">
         <div v-if="loadError" class="mb-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ loadError }}</div>
         <div v-if="saveMessage" class="mb-4 rounded-2xl border px-4 py-3 text-sm" :class="saveError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">{{ saveMessage }}</div>
         <router-view v-slot="{ Component }">
@@ -271,6 +299,17 @@ const pageProps = computed(() => {
   const config = recordConfig[key] || { title: pageTitle.value, columns: [{ label: 'Name', key: 'name' }] }
   return { ...config, rows: records.value[key] || [] }
 })
+
+const mobileLabels = { dashboard: 'ہوم', driver: 'ڈرائیور', 'trip-scanner': 'سکینر', settings: 'پروفائل' }
+const showMobileMore = ref(false)
+const hasMoreItems = computed(() => nav.value.length > 4)
+const mobileBarItems = computed(() => (hasMoreItems.value ? nav.value.slice(0, 3) : nav.value))
+const moreItems = computed(() => (hasMoreItems.value ? nav.value.slice(3) : []))
+
+function openFromMore(key) {
+  showMobileMore.value = false
+  navigate(key)
+}
 
 function navigate(key) {
   if (!nav.value.some((item) => item.key === key)) key = nav.value[0]?.key || 'driver'
