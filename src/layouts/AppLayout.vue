@@ -5,7 +5,7 @@
       <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-blue-500/25">
         F
       </div>
-      <h1 class="font-thuluth mt-6 text-5xl text-white">نعمان ٹیکسی</h1>
+      <h1 class="font-thuluth mt-6 text-5xl text-white">الحرمین ٹیکسی</h1>
       <p class="mt-2 text-sm text-slate-400">شرکۃ النعمانیۃ کی جانب سے</p>
       <p class="mt-2 text-slate-400">Fleet Transportation Management System</p>
       <p class="mt-1 text-sm text-slate-500">Manage trips, fleet, captains & bookings</p>

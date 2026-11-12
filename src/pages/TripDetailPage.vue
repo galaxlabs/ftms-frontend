@@ -3,7 +3,7 @@
     <!-- Top bar -->
     <header class="sticky top-0 z-40 border-b border-white/10 bg-slate-950/90 backdrop-blur">
       <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-        <a href="/" class="font-thuluth text-base text-slate-400 hover:text-white">&larr; نعمان ٹیکسی</a>
+        <a href="/" class="font-thuluth text-base text-slate-400 hover:text-white">&larr; الحرمین ٹیکسی</a>
         <button v-if="tripInfo" @click="printKashf" class="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20">
           Print Kashf
         </button>
