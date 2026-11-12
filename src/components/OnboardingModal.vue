@@ -131,59 +131,109 @@
         </div>
       </form>
 
-      <!-- Captain Profile Form -->
-      <form v-if="step === 'captain_form'" @submit.prevent="submitCaptainProfile">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Captain Profile</div>
-            <h2 class="mt-1 text-2xl font-semibold text-white">Become a captain</h2>
+      <!-- Captain Profile: one question per screen (Urdu) -->
+      <form v-if="step === 'captain_form'" dir="rtl" class="space-y-6" @submit.prevent="currentCaptainStep === 'review' ? submitCaptainProfile() : nextCaptainStep()">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-sm text-slate-400">مرحلہ {{ captainStepIndex + 1 }} از {{ captainSteps.length }}</div>
+          <button type="button" class="rounded-xl border border-white/10 px-4 py-2 text-base text-slate-300 hover:bg-white/5" @click="prevCaptainStep">
+            {{ captainStepIndex === 0 ? 'واپس' : 'پیچھے' }}
+          </button>
+        </div>
+        <div class="h-2 overflow-hidden rounded-full bg-white/10">
+          <div class="h-2 rounded-full bg-emerald-400 transition-all" :style="{ width: captainProgress + '%' }"></div>
+        </div>
+
+        <section v-if="currentCaptainStep === 'full_name'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">آپ کا پورا نام کیا ہے؟</h2>
+          <p class="text-base text-slate-400">جیسا شناختی کارڈ پر لکھا ہے۔</p>
+          <input v-model="captainForm.full_name" dir="auto" autofocus class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-xl text-white outline-none focus:border-emerald-400" placeholder="مثلاً محمد علی" />
+        </section>
+
+        <section v-if="currentCaptainStep === 'mobile_no'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">آپ کا موبائل نمبر؟</h2>
+          <p class="text-base text-slate-400">اس نمبر پر ہم آپ سے رابطہ کریں گے۔</p>
+          <input v-model="captainForm.mobile_no" dir="ltr" inputmode="tel" autofocus class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-xl text-white outline-none focus:border-emerald-400" placeholder="05XXXXXXXX" />
+        </section>
+
+        <section v-if="currentCaptainStep === 'id_document_type'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">آپ کے پاس کون سا کارڈ ہے؟</h2>
+          <p class="text-base text-slate-400">کوئی ایک چنیں۔</p>
+          <div class="grid gap-3">
+            <button
+              v-for="option in idTypeOptions"
+              :key="option.value"
+              type="button"
+              class="flex items-center justify-between rounded-2xl border px-5 py-5 text-left text-xl font-bold transition"
+              :class="captainForm.id_document_type === option.value ? 'border-emerald-400 bg-emerald-400/15 text-emerald-200' : 'border-white/10 bg-white/5 text-white hover:border-emerald-400/50'"
+              @click="chooseDocumentType(option.value)"
+            >
+              <span>{{ option.label }}</span>
+              <span class="text-base font-normal text-slate-400">{{ option.hint }}</span>
+            </button>
           </div>
-          <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="step = 'choose'">Back</button>
-        </div>
-        <div class="mt-5 grid gap-4 sm:grid-cols-2">
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>Full name</span>
-            <input v-model="captainForm.full_name" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Full name as per ID" />
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>Mobile no.</span>
-            <input v-model="captainForm.mobile_no" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="+966 5X XXX XXXX" />
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>ID document type</span>
-            <select v-model="captainForm.id_document_type" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400">
-              <option value="National ID">Saudi National ID</option>
-              <option value="Iqama">Iqama</option>
-            </select>
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>{{ captainForm.id_document_type === 'Iqama' ? 'Iqama no.' : 'National ID' }}</span>
-            <input v-model="captainForm.identity_number" required inputmode="numeric" class="w-full rounded-xl border px-3 py-2 text-white outline-none focus:border-emerald-400" :class="captainIdError ? 'border-rose-400/50 bg-rose-500/10' : 'border-white/10 bg-white/5'" :placeholder="captainForm.id_document_type === 'Iqama' ? '2123456789' : '1234567890'" @input="validateCaptainId" />
-            <p class="text-xs text-slate-400">Use 10 digits only. Saudi National ID starts with 1; Iqama starts with 2.</p>
-            <p v-if="captainIdError" class="text-xs text-rose-400">{{ captainIdError }}</p>
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>License no.</span>
-            <input v-model="captainForm.license_no" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Driving license number" />
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>License expiry</span>
-            <input v-model="captainForm.license_expiry_date" type="date" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" />
-          </label>
-          <label class="space-y-2 text-sm text-slate-300">
-            <span>City</span>
-            <input v-model="captainForm.city" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Riyadh" />
-          </label>
-          <label class="space-y-2 text-sm text-slate-300 sm:col-span-2">
-            <span>Address</span>
-            <input v-model="captainForm.address" required class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-emerald-400" placeholder="Street, district, city" />
-          </label>
-        </div>
-        <div v-if="message" class="mt-4 rounded-2xl border px-4 py-3 text-sm" :class="isError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">{{ message }}</div>
-        <div class="mt-5 flex justify-end gap-2">
-          <button type="button" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 hover:bg-white/5" @click="step = 'choose'">Back</button>
-          <button type="submit" class="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-400 disabled:opacity-60" :disabled="loading">{{ loading ? 'Creating...' : 'Create Captain Profile' }}</button>
-        </div>
+        </section>
+
+        <section v-if="currentCaptainStep === 'identity_number'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">
+            {{ captainForm.id_document_type === 'Iqama' ? 'اقامہ نمبر کیا ہے؟' : 'قومی شناختی کارڈ کا نمبر کیا ہے؟' }}
+          </h2>
+          <p class="text-base text-slate-400">صرف 10 ہندسے لکھیں۔</p>
+          <input
+            v-model="captainForm.identity_number"
+            dir="ltr"
+            inputmode="numeric"
+            autofocus
+            class="w-full rounded-2xl border px-4 py-4 text-xl tracking-widest text-white outline-none focus:border-emerald-400"
+            :class="captainIdError ? 'border-rose-400/50 bg-rose-500/10' : 'border-white/10 bg-white/5'"
+            :placeholder="captainForm.id_document_type === 'Iqama' ? '2123456789' : '1234567890'"
+            @input="captainIdError = ''"
+          />
+        </section>
+
+        <section v-if="currentCaptainStep === 'license_no'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">ڈرائیونگ لائسنس نمبر؟</h2>
+          <input v-model="captainForm.license_no" dir="ltr" autofocus class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-xl text-white outline-none focus:border-emerald-400" placeholder="لائسنس نمبر" />
+        </section>
+
+        <section v-if="currentCaptainStep === 'license_expiry_date'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">لائسنس کب ختم ہوتا ہے؟</h2>
+          <input v-model="captainForm.license_expiry_date" type="date" dir="ltr" autofocus class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-xl text-white outline-none focus:border-emerald-400" />
+        </section>
+
+        <section v-if="currentCaptainStep === 'city'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">آپ کس شہر میں رہتے ہیں؟</h2>
+          <input v-model="captainForm.city" dir="auto" autofocus class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-xl text-white outline-none focus:border-emerald-400" placeholder="مثلاً ریاض" />
+        </section>
+
+        <section v-if="currentCaptainStep === 'address'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">آپ کا پتہ؟</h2>
+          <p class="text-base text-slate-400">محلہ اور سڑک کا نام لکھیں۔</p>
+          <input v-model="captainForm.address" dir="auto" autofocus class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-xl text-white outline-none focus:border-emerald-400" placeholder="محلہ، سڑک، شہر" />
+        </section>
+
+        <section v-if="currentCaptainStep === 'review'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-white">کیا سب درست ہے؟</h2>
+          <dl class="divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/5 text-base">
+            <div class="flex justify-between gap-4 px-4 py-3"><dt class="text-slate-400">نام</dt><dd class="text-white">{{ captainForm.full_name }}</dd></div>
+            <div class="flex justify-between gap-4 px-4 py-3"><dt class="text-slate-400">موبائل</dt><dd class="text-white" dir="ltr">{{ captainForm.mobile_no }}</dd></div>
+            <div class="flex justify-between gap-4 px-4 py-3"><dt class="text-slate-400">{{ captainForm.id_document_type === 'Iqama' ? 'اقامہ' : 'شناختی کارڈ' }}</dt><dd class="text-white" dir="ltr">{{ maskedIdentity }}</dd></div>
+            <div class="flex justify-between gap-4 px-4 py-3"><dt class="text-slate-400">لائسنس</dt><dd class="text-white" dir="ltr">{{ captainForm.license_no }} · {{ captainForm.license_expiry_date }}</dd></div>
+            <div class="flex justify-between gap-4 px-4 py-3"><dt class="text-slate-400">شہر</dt><dd class="text-white">{{ captainForm.city }}</dd></div>
+            <div class="flex justify-between gap-4 px-4 py-3"><dt class="text-slate-400">پتہ</dt><dd class="text-white">{{ captainForm.address }}</dd></div>
+          </dl>
+        </section>
+
+        <div v-if="message" class="rounded-2xl border px-4 py-3 text-base" :class="isError ? 'border-rose-400/20 bg-rose-500/10 text-rose-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'">{{ message }}</div>
+
+        <button
+          v-if="currentCaptainStep !== 'id_document_type'"
+          type="submit"
+          class="flex w-full items-center justify-center rounded-2xl py-5 text-xl font-black text-slate-950 transition disabled:opacity-60"
+          :class="currentCaptainStep === 'review' ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-emerald-500 hover:bg-emerald-400'"
+          :disabled="loading"
+        >
+          {{ loading ? 'براہ کرم انتظار کریں...' : currentCaptainStep === 'review' ? 'پروفائل بنائیں' : 'آگے' }}
+        </button>
       </form>
     </div>
   </div>
@@ -272,7 +322,7 @@ async function selectRole(role) {
     await api.setRole(role)
     if (role === 'Passenger') step.value = 'passenger_form'
     else if (role === 'Partner') step.value = 'partner_type'
-    else if (role === 'Captain') step.value = 'captain_form'
+    else if (role === 'Captain') { captainStepIndex.value = 0; message.value = ''; step.value = 'captain_form' }
   } catch (error) {
     isError.value = true; message.value = String(error?.message || error)
   }
@@ -326,11 +376,64 @@ async function submitCaptainProfile() {
     })
     await api.setUserType('Captain')
     await api.completeOnboarding()
-    message.value = 'Captain profile created. You can now request to join a company.'
+    message.value = 'کپتان کا پروفائل بن گیا ہے۔ اب آپ کمپنی میں شامل ہونے کی درخواست دے سکتے ہیں۔'
     setTimeout(() => emit('done'), 1500)
   } catch (error) {
     isError.value = true; message.value = String(error?.message || error)
   } finally { loading.value = false }
+}
+
+const idTypeOptions = [
+  { value: 'National ID', label: 'سعودی قومی شناختی کارڈ', hint: '1 سے شروع' },
+  { value: 'Iqama', label: 'اقامہ', hint: '2 سے شروع' },
+]
+
+const captainSteps = ['full_name', 'mobile_no', 'id_document_type', 'identity_number', 'license_no', 'license_expiry_date', 'city', 'address', 'review']
+const captainStepIndex = ref(0)
+const currentCaptainStep = computed(() => captainSteps[captainStepIndex.value])
+const captainProgress = computed(() => Math.round((captainStepIndex.value / (captainSteps.length - 1)) * 100))
+const maskedIdentity = computed(() => {
+  const digits = normalizeDigits(captainForm.value.identity_number)
+  return digits ? `••••${digits.slice(-4)}` : ''
+})
+
+function captainStepError(key) {
+  const f = captainForm.value
+  if (key === 'full_name' && !f.full_name.trim()) return 'نام لکھنا ضروری ہے۔'
+  if (key === 'mobile_no' && !f.mobile_no.trim()) return 'موبائل نمبر لکھیں۔'
+  if (key === 'identity_number') return validateCaptainId() ? '' : captainIdError.value
+  if (key === 'license_no' && !f.license_no.trim()) return 'لائسنس نمبر لکھیں۔'
+  if (key === 'license_expiry_date' && !f.license_expiry_date) return 'لائسنس کی میعاد کی تاریخ چنیں۔'
+  if (key === 'city' && !f.city.trim()) return 'شہر کا نام لکھیں۔'
+  if (key === 'address' && !f.address.trim()) return 'پتہ لکھیں۔'
+  return ''
+}
+
+function nextCaptainStep() {
+  const error = captainStepError(currentCaptainStep.value)
+  if (error) {
+    isError.value = true
+    message.value = error
+    return
+  }
+  message.value = ''
+  isError.value = false
+  if (captainStepIndex.value < captainSteps.length - 1) captainStepIndex.value++
+}
+
+function prevCaptainStep() {
+  message.value = ''
+  if (captainStepIndex.value === 0) {
+    step.value = 'choose'
+    return
+  }
+  captainStepIndex.value--
+}
+
+function chooseDocumentType(type) {
+  captainForm.value.id_document_type = type
+  captainIdError.value = ''
+  nextCaptainStep()
 }
 
 function normalizeDigits(value) {
