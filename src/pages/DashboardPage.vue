@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <PageHeader
       eyebrow="Operations Command"
-      title="شرکۃ النعمانیۃ Control Center"
+      title="Nomani Ride Control Center"
       description="Live company-level transport activity across fleet, routes, bookings, invoices, and ZATCA readiness."
     />
 
@@ -18,7 +18,7 @@
         <div class="flex items-center justify-between">
           <div>
             <div class="text-sm font-medium text-white">Operational Signals</div>
-            <div class="mt-1 text-xs text-slate-500">Loaded from شرکۃ النعمانیۃ APIs for the selected company.</div>
+            <div class="mt-1 text-xs text-slate-500">Loaded from Nomani Ride APIs for the selected company.</div>
           </div>
           <button class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300 hover:bg-white/10" @click="$emit('refresh')">
             Refresh

@@ -1,6 +1,6 @@
 {
-  "name": "FTMS Driver",
-  "short_name": "FTMS",
+  "name": "Nomani Ride Driver",
+  "short_name": "Nomani Ride",
   "description": "Fleet Transportation Management System for drivers and operators",
   "start_url": "/driver",
   "scope": "/",

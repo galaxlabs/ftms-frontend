@@ -3,7 +3,7 @@
     <PageHeader
       eyebrow="Account Settings"
       title="Profile Settings"
-      description="Manage your login profile and review the active company membership used by شرکۃ النعمانیۃ tenancy."
+      description="Manage your login profile and review the active company membership used by Nomani Ride tenancy."
     />
 
     <div v-if="!user?.is_authenticated" class="rounded-3xl border border-amber-400/20 bg-amber-500/10 p-5 text-sm text-amber-100">
