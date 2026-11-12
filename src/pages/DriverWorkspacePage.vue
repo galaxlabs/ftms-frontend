@@ -12,10 +12,10 @@
               <span class="rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-1 text-xs text-sky-100">Website bookings only</span>
             </div>
             <h1 class="mt-6 max-w-3xl text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Nomani Taxi for compliant driver operations, cash, VAT, and trip settlement.
+              Al Haramain Taxi for compliant driver operations, cash, VAT, and trip settlement.
             </h1>
             <p class="mt-4 max-w-2xl text-base leading-7 text-slate-300">
-              This screen is not a passenger marketplace. Bookings come from your website or admin channels, then Nomani Taxi assigns drivers, calculates trip value, cash received, VAT, commission, and company settlement.
+              This screen is not a passenger marketplace. Bookings come from your website or admin channels, then Al Haramain Taxi assigns drivers, calculates trip value, cash received, VAT, commission, and company settlement.
             </p>
             <div class="mt-6 grid gap-3 sm:grid-cols-3">
               <div v-for="metric in heroMetrics" :key="metric.label" class="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -341,9 +341,9 @@ const settlementCards = computed(() => [
 ])
 
 const complianceSteps = [
-  { title: '1. Website gets booking', text: 'Customer accepts your website terms and pricing. Nomani Taxi receives the booking as an operations record.' },
+  { title: '1. Website gets booking', text: 'Customer accepts your website terms and pricing. Al Haramain Taxi receives the booking as an operations record.' },
   { title: '2. Driver executes trip', text: 'Driver sees assigned trip, collects payment if cash, and confirms distance/status.' },
-  { title: '3. Nomani Taxi settles books', text: 'System calculates VAT, cash due, commission, and invoice values for Saudi compliance.' },
+  { title: '3. Al Haramain Taxi settles books', text: 'System calculates VAT, cash due, commission, and invoice values for Saudi compliance.' },
 ]
 
 const payLabel = computed(() => (subscription.value.active ? 'Pay next agreement period' : 'Pay to activate agreement'))

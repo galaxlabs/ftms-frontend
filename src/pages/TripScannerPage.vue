@@ -3,7 +3,7 @@
     <PageHeader
       eyebrow="TripScanner"
       title="Create Trip From Documents"
-      description="Upload passenger documents, review the child-table rows, then create an Nomani Taxi trip under your linked company."
+      description="Upload passenger documents, review the child-table rows, then create an Al Haramain Taxi trip under your linked company."
     />
 
     <div class="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">

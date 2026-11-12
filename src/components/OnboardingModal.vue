@@ -5,7 +5,7 @@
       <div v-if="step === 'choose'" class="space-y-5">
         <div>
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Getting Started</div>
-          <h2 class="mt-1 text-2xl font-semibold text-white">How will you use Nomani Taxi?</h2>
+          <h2 class="mt-1 text-2xl font-semibold text-white">How will you use Al Haramain Taxi?</h2>
           <p class="mt-2 text-sm text-slate-400">Choose your role to get started.</p>
         </div>
         <div class="grid gap-4 sm:grid-cols-3">
