@@ -27,6 +27,7 @@ export const api = {
   updateProfile: (payload) => call('ftms.api.auth.update_profile', payload),
   dashboard: (company) => call('ftms.api.dashboard.overview', { company }),
   getGoogleLoginUrl: (redirect_to) => call('ftms.api.auth.get_google_login_url', { redirect_to }),
+  loginWithFirebase: (id_token) => call('ftms.api.auth.login_with_firebase', { id_token }),
   signupUser: (payload) => call('ftms.api.onboarding.signup_user', payload),
   registerTransportationCompany: (payload) => call('ftms.api.onboarding.register_transportation_company', payload),
   createOnboardingCaptainProfile: (payload) => call('ftms.api.onboarding.create_captain_profile', payload),

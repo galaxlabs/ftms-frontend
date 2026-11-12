@@ -168,6 +168,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { api } from '../lib/api'
+import { signInWithGoogleIdToken } from '../lib/firebase'
 import Sidebar from '../components/Sidebar.vue'
 import Topbar from '../components/Topbar.vue'
 import OnboardingModal from '../components/OnboardingModal.vue'
@@ -383,7 +384,20 @@ async function submitSignup() {
   finally { signupLoading.value = false }
 }
 
-async function loginWithGoogle() { window.location.href = await api.getGoogleLoginUrl(window.location.origin) }
+async function loginWithGoogle() {
+  loginMessage.value = ''; loginError.value = false
+  try {
+    const idToken = await signInWithGoogleIdToken()
+    await api.loginWithFirebase(idToken)
+    await loadCurrentUser()
+    showLogin.value = false
+    await loadCompanies(); await loadData(); await checkOnboarding()
+  } catch (error) {
+    if (error?.code === 'auth/popup-closed-by-user') return
+    loginError.value = true
+    loginMessage.value = String(error?.message || error)
+  }
+}
 
 async function logout() {
   stopNotificationPolling()
