@@ -5,7 +5,7 @@
       <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-blue-600 text-2xl font-bold text-white shadow-lg shadow-blue-500/25">
         F
       </div>
-      <h1 class="font-thuluth mt-6 text-5xl text-white">نعمان رائیڈ</h1>
+      <h1 class="font-thuluth mt-6 text-5xl text-white">نعمان ٹیکسی</h1>
       <p class="mt-2 text-sm text-slate-400">شرکۃ النعمانیۃ کی جانب سے</p>
       <p class="mt-2 text-slate-400">Fleet Transportation Management System</p>
       <p class="mt-1 text-sm text-slate-500">Manage trips, fleet, captains & bookings</p>
@@ -94,7 +94,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">User Login</div>
-          <h2 class="mt-1 text-2xl font-semibold text-white">Login to Nomani Ride</h2>
+          <h2 class="mt-1 text-2xl font-semibold text-white">Login to Nomani Taxi</h2>
         </div>
         <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="closeLogin">Close</button>
       </div>
@@ -128,7 +128,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Account Creation</div>
-          <h2 class="mt-1 text-2xl font-semibold text-white">Create your Nomani Ride account</h2>
+          <h2 class="mt-1 text-2xl font-semibold text-white">Create your Nomani Taxi account</h2>
           <p class="mt-2 text-sm text-slate-400">Enter your details to get started.</p>
         </div>
         <button type="button" class="rounded-xl border border-white/10 px-3 py-1 text-sm text-slate-300 hover:bg-white/5" @click="closeSignup">Close</button>

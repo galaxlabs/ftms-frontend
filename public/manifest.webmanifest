@@ -1,6 +1,6 @@
 {
-  "name": "Nomani Ride Driver",
-  "short_name": "Nomani Ride",
+  "name": "Nomani Taxi Driver",
+  "short_name": "Nomani Taxi",
   "description": "Fleet Transportation Management System for drivers and operators",
   "start_url": "/driver",
   "scope": "/",

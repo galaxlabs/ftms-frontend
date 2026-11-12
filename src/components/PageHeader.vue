@@ -15,7 +15,7 @@
 
 <script setup>
 defineProps({
-  eyebrow: { type: String, default: 'Nomani Ride' },
+  eyebrow: { type: String, default: 'Nomani Taxi' },
   title: { type: String, required: true },
   description: { type: String, default: '' },
 })
