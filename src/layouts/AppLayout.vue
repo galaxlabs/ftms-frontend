@@ -47,11 +47,18 @@
         @signup="showSignup = true"
       />
 
-      <div class="border-b border-white/10 bg-slate-950/60 px-4 py-3 lg:hidden">
-        <select v-model="active" @change="navigate(active)" class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none">
-          <option v-for="item in nav" :key="item.key" :value="item.key">{{ item.label }}</option>
-        </select>
-      </div>
+      <nav class="flex gap-2 overflow-x-auto border-b border-white/10 bg-slate-950/60 px-4 py-3 lg:hidden" aria-label="Menu">
+        <button
+          v-for="item in nav"
+          :key="item.key"
+          type="button"
+          class="shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold transition"
+          :class="active === item.key ? 'bg-blue-500 text-white' : 'border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'"
+          @click="navigate(item.key)"
+        >
+          {{ item.label }}
+        </button>
+      </nav>
 
       <section class="flex-1 overflow-y-auto p-4 sm:p-6">
         <div v-if="loadError" class="mb-4 rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ loadError }}</div>

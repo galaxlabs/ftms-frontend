@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#070b12] text-white">
-    <div class="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.18),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.22),transparent_30%)]"></div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.18),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(59,130,246,0.22),transparent_30%)]"></div>
 
     <main class="relative mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
       <DriverHomeCard v-if="!isDemo" />
