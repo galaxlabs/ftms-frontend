@@ -31,3 +31,10 @@ select option:checked {
   font-weight: 700;
   direction: rtl;
 }
+
+/* Brand and display fonts (Google Fonts, loaded in index.html) */
+.font-ruqaa { font-family: 'Aref Ruqaa', 'Amiri', serif; font-weight: 700; direction: rtl; }
+.font-urdu { font-family: 'Noto Nastaliq Urdu', 'Amiri', serif; direction: rtl; }
+.font-naskh { font-family: 'Noto Naskh Arabic', 'Amiri', serif; direction: rtl; }
+.font-lateef { font-family: 'Lateef', 'Amiri', serif; direction: rtl; }
+.font-display { font-family: 'Poppins', 'Inter', sans-serif; }
