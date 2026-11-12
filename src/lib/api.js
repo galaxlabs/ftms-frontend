@@ -38,6 +38,7 @@ export const api = {
   subscriptionPlans: () => call('ftms.api.subscription.get_plans'),
   subscribe: () => call('ftms.api.subscription.subscribe'),
   setOnline: (online) => call('ftms.api.subscription.set_online', { online: online ? 1 : 0 }),
+  driverHome: () => call('ftms.api.driver_home.get_driver_home'),
   setRole: (role) => call('ftms.api.onboarding.set_role', { role }),
   createPassengerProfile: (payload) => call('ftms.api.onboarding.create_passenger_profile', payload),
   createPartnerProfile: (payload) => call('ftms.api.onboarding.create_partner_profile', payload),
